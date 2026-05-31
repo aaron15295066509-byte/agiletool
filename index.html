@@ -313,6 +313,34 @@
     <div class="status" id="weight-status">✅ 输入长宽和密度自动计算</div>
   </div>
 
+  <!-- ==================== 尺寸转换 ==================== -->
+  <div class="card" id="length-card">
+    <div class="card-title"><span class="icon icon-length">📏</span> 尺寸转换</div>
+
+    <div class="converter-row">
+      <span class="label">数值</span>
+      <input type="number" id="length-value" value="1" min="0" step="any" placeholder="输入数值">
+    </div>
+
+    <div class="converter-row">
+      <span class="label">从</span>
+      <select id="length-from"></select>
+      <button class="btn-swap" id="length-swap" title="互换单位">⇄</button>
+      <span class="label">到</span>
+      <select id="length-to"></select>
+    </div>
+
+    <div class="result-box">
+      <div>
+        <div class="result-label" id="length-result-label">1 厘米 =</div>
+        <div class="result-meta" id="length-rate-meta">固定换算率</div>
+      </div>
+      <span class="result-value" id="length-result">—</span>
+    </div>
+
+    <div class="status" id="length-status">✅ 离线可用，无需网络</div>
+  </div>
+
   <!-- ==================== 汇率转换 ==================== -->
   <div class="card" id="currency-card">
     <div class="card-title"><span class="icon icon-currency">💱</span> 汇率转换</div>
@@ -341,34 +369,6 @@
     <div class="status" id="currency-status">
       <span class="spinner"></span> 获取汇率中...
     </div>
-  </div>
-
-  <!-- ==================== 尺寸转换 ==================== -->
-  <div class="card" id="length-card">
-    <div class="card-title"><span class="icon icon-length">📏</span> 尺寸转换</div>
-
-    <div class="converter-row">
-      <span class="label">数值</span>
-      <input type="number" id="length-value" value="1" min="0" step="any" placeholder="输入数值">
-    </div>
-
-    <div class="converter-row">
-      <span class="label">从</span>
-      <select id="length-from"></select>
-      <button class="btn-swap" id="length-swap" title="互换单位">⇄</button>
-      <span class="label">到</span>
-      <select id="length-to"></select>
-    </div>
-
-    <div class="result-box">
-      <div>
-        <div class="result-label" id="length-result-label">1 厘米 =</div>
-        <div class="result-meta" id="length-rate-meta">固定换算率</div>
-      </div>
-      <span class="result-value" id="length-result">—</span>
-    </div>
-
-    <div class="status" id="length-status">✅ 离线可用，无需网络</div>
   </div>
 </div>
 
