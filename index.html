@@ -104,6 +104,8 @@
     font-size: 14px;
     color: #fff;
   }
+  .icon-cost { background: linear-gradient(135deg, #f97316, #eab308); }
+  .icon-weight { background: linear-gradient(135deg, #a855f7, #8b5cf6); }
   .icon-currency { background: linear-gradient(135deg, #3b82f6, #6366f1); }
   .icon-length { background: linear-gradient(135deg, #22c55e, #10b981); }
 
@@ -242,10 +244,74 @@
 
 <header>
   <h1><span class="logo">A</span> Agiletool</h1>
-  <p>随身工具包 · 汇率 &amp; 尺寸转换</p>
+  <p>随身工具包 · 地毯成本 · 重量 · 汇率 · 尺寸</p>
 </header>
 
 <div class="container">
+
+  <!-- ==================== 地毯成本计算 ==================== -->
+  <div class="card" id="cost-card">
+    <div class="card-title"><span class="icon icon-cost">💰</span> 地毯成本计算</div>
+
+    <div class="converter-row">
+      <span class="label">长 (米)</span>
+      <input type="number" id="cost-length" value="1" min="0" step="0.01" placeholder="输入地毯长度">
+    </div>
+    <div class="converter-row">
+      <span class="label">宽 (米)</span>
+      <input type="number" id="cost-width" value="1" min="0" step="0.01" placeholder="输入地毯宽度">
+    </div>
+    <div class="converter-row">
+      <span class="label">面积</span>
+      <span style="flex:1;font-size:15px;padding:10px 12px;color:var(--text-secondary);" id="cost-area-display">1 ㎡</span>
+    </div>
+    <div class="converter-row">
+      <span class="label">单价</span>
+      <input type="number" id="cost-price" value="60" min="0" step="1" placeholder="元/㎡">
+      <span style="font-size:13px;color:var(--text-secondary);white-space:nowrap;">元/㎡</span>
+    </div>
+
+    <div class="result-box">
+      <div>
+        <div class="result-label">地毯成本</div>
+        <div class="result-meta">长 × 宽 × 单价</div>
+      </div>
+      <span class="result-value" id="cost-result">60 元</span>
+    </div>
+    <div class="status" id="cost-status">✅ 输入长宽和单价自动计算</div>
+  </div>
+
+  <!-- ==================== 地毯重量计算 ==================== -->
+  <div class="card" id="weight-card">
+    <div class="card-title"><span class="icon icon-weight">⚖️</span> 地毯重量计算</div>
+
+    <div class="converter-row">
+      <span class="label">长 (米)</span>
+      <input type="number" id="weight-length" value="1" min="0" step="0.01" placeholder="输入地毯长度">
+    </div>
+    <div class="converter-row">
+      <span class="label">宽 (米)</span>
+      <input type="number" id="weight-width" value="1" min="0" step="0.01" placeholder="输入地毯宽度">
+    </div>
+    <div class="converter-row">
+      <span class="label">面积</span>
+      <span style="flex:1;font-size:15px;padding:10px 12px;color:var(--text-secondary);" id="weight-area-display">1 ㎡</span>
+    </div>
+    <div class="converter-row">
+      <span class="label">每㎡重量</span>
+      <input type="number" id="weight-density" value="1.75" min="0" step="0.01" placeholder="KG/㎡">
+      <span style="font-size:13px;color:var(--text-secondary);white-space:nowrap;">KG/㎡</span>
+    </div>
+
+    <div class="result-box">
+      <div>
+        <div class="result-label">地毯重量</div>
+        <div class="result-meta">长 × 宽 × 每㎡重量</div>
+      </div>
+      <span class="result-value" id="weight-result">1.75 KG</span>
+    </div>
+    <div class="status" id="weight-status">✅ 输入长宽和密度自动计算</div>
+  </div>
 
   <!-- ==================== 汇率转换 ==================== -->
   <div class="card" id="currency-card">
@@ -360,6 +426,20 @@ const LENGTH_UNITS = [
 // ============================================================
 
 const $ = id => document.getElementById(id);
+const costLength  = $('cost-length');
+const costWidth   = $('cost-width');
+const costPrice   = $('cost-price');
+const costAreaDisp = $('cost-area-display');
+const costResult   = $('cost-result');
+const costStatus   = $('cost-status');
+
+const weightLength  = $('weight-length');
+const weightWidth   = $('weight-width');
+const weightDensity = $('weight-density');
+const weightAreaDisp = $('weight-area-display');
+const weightResult   = $('weight-result');
+const weightStatus   = $('weight-status');
+
 const currencyAmount  = $('currency-amount');
 const currencyFrom    = $('currency-from');
 const currencyTo      = $('currency-to');
@@ -519,7 +599,53 @@ function convertLength() {
 }
 
 // ============================================================
-// 6. 事件绑定
+// 6a. 地毯成本计算
+// ============================================================
+
+function calcCost() {
+  const len = parseFloat(costLength.value);
+  const wid = parseFloat(costWidth.value);
+  const price = parseFloat(costPrice.value);
+
+  if (isNaN(len) || len <= 0) { costLength.classList.add('error'); return; }
+  costLength.classList.remove('error');
+  if (isNaN(wid) || wid <= 0) { costWidth.classList.add('error'); return; }
+  costWidth.classList.remove('error');
+  if (isNaN(price) || price < 0) { costPrice.classList.add('error'); return; }
+  costPrice.classList.remove('error');
+
+  const area = len * wid;
+  const cost = area * price;
+  costAreaDisp.textContent = `${area.toFixed(2)} ㎡`;
+  costResult.textContent = `${cost.toFixed(2)} 元`;
+  costStatus.textContent = `✅ ${len}×${wid}=${area.toFixed(2)}㎡ × ${price}元/㎡ = ${cost.toFixed(2)}元`;
+}
+
+// ============================================================
+// 6b. 地毯重量计算
+// ============================================================
+
+function calcWeight() {
+  const len = parseFloat(weightLength.value);
+  const wid = parseFloat(weightWidth.value);
+  const density = parseFloat(weightDensity.value);
+
+  if (isNaN(len) || len <= 0) { weightLength.classList.add('error'); return; }
+  weightLength.classList.remove('error');
+  if (isNaN(wid) || wid <= 0) { weightWidth.classList.add('error'); return; }
+  weightWidth.classList.remove('error');
+  if (isNaN(density) || density <= 0) { weightDensity.classList.add('error'); return; }
+  weightDensity.classList.remove('error');
+
+  const area = len * wid;
+  const weight = area * density;
+  weightAreaDisp.textContent = `${area.toFixed(2)} ㎡`;
+  weightResult.textContent = `${weight.toFixed(2)} KG`;
+  weightStatus.textContent = `✅ ${len}×${wid}=${area.toFixed(2)}㎡ × ${density.toFixed(2)}KG/㎡ = ${weight.toFixed(2)}KG`;
+}
+
+// ============================================================
+// 7. 事件绑定
 // ============================================================
 
 // 汇率
@@ -532,6 +658,16 @@ currencySwap.addEventListener('click', () => {
   currencyTo.value   = tmp;
   convertCurrency();
 });
+
+// 地毯成本
+costLength.addEventListener('input', calcCost);
+costWidth.addEventListener('input', calcCost);
+costPrice.addEventListener('input', calcCost);
+
+// 地毯重量
+weightLength.addEventListener('input', calcWeight);
+weightWidth.addEventListener('input', calcWeight);
+weightDensity.addEventListener('input', calcWeight);
 
 // 尺寸
 lengthValue.addEventListener('input', convertLength);
@@ -550,6 +686,8 @@ lengthSwap.addEventListener('click', () => {
 
 convertCurrency();
 convertLength();
+calcCost();
+calcWeight();
 
 // 每 30 分钟自动刷新汇率
 setInterval(() => { rateCache = null; convertCurrency(); }, CACHE_TTL);
