@@ -254,12 +254,12 @@
     <div class="card-title"><span class="icon icon-cost">💰</span> 地毯成本计算</div>
 
     <div class="converter-row">
-      <span class="label">长 (米)</span>
-      <input type="number" id="cost-length" value="1" min="0" step="0.01" placeholder="输入地毯长度">
+      <span class="label">长 (厘米)</span>
+      <input type="number" id="cost-length" value="100" min="0" step="1" placeholder="输入地毯长度(cm)">
     </div>
     <div class="converter-row">
-      <span class="label">宽 (米)</span>
-      <input type="number" id="cost-width" value="1" min="0" step="0.01" placeholder="输入地毯宽度">
+      <span class="label">宽 (厘米)</span>
+      <input type="number" id="cost-width" value="100" min="0" step="1" placeholder="输入地毯宽度(cm)">
     </div>
     <div class="converter-row">
       <span class="label">面积</span>
@@ -286,12 +286,12 @@
     <div class="card-title"><span class="icon icon-weight">⚖️</span> 地毯重量计算</div>
 
     <div class="converter-row">
-      <span class="label">长 (米)</span>
-      <input type="number" id="weight-length" value="1" min="0" step="0.01" placeholder="输入地毯长度">
+      <span class="label">长 (厘米)</span>
+      <input type="number" id="weight-length" value="100" min="0" step="1" placeholder="输入地毯长度(cm)">
     </div>
     <div class="converter-row">
-      <span class="label">宽 (米)</span>
-      <input type="number" id="weight-width" value="1" min="0" step="0.01" placeholder="输入地毯宽度">
+      <span class="label">宽 (厘米)</span>
+      <input type="number" id="weight-width" value="100" min="0" step="1" placeholder="输入地毯宽度(cm)">
     </div>
     <div class="converter-row">
       <span class="label">面积</span>
@@ -614,11 +614,11 @@ function calcCost() {
   if (isNaN(price) || price < 0) { costPrice.classList.add('error'); return; }
   costPrice.classList.remove('error');
 
-  const area = len * wid;
+  const area = len * wid / 10000;
   const cost = area * price;
   costAreaDisp.textContent = `${area.toFixed(2)} ㎡`;
   costResult.textContent = `${cost.toFixed(2)} 元`;
-  costStatus.textContent = `✅ ${len}×${wid}=${area.toFixed(2)}㎡ × ${price}元/㎡ = ${cost.toFixed(2)}元`;
+  costStatus.textContent = `✅ ${len}cm×${wid}cm = ${area.toFixed(2)}㎡ × ${price}元/㎡ = ${cost.toFixed(2)}元`;
 }
 
 // ============================================================
@@ -637,11 +637,11 @@ function calcWeight() {
   if (isNaN(density) || density <= 0) { weightDensity.classList.add('error'); return; }
   weightDensity.classList.remove('error');
 
-  const area = len * wid;
+  const area = len * wid / 10000;
   const weight = area * density;
   weightAreaDisp.textContent = `${area.toFixed(2)} ㎡`;
   weightResult.textContent = `${weight.toFixed(2)} KG`;
-  weightStatus.textContent = `✅ ${len}×${wid}=${area.toFixed(2)}㎡ × ${density.toFixed(2)}KG/㎡ = ${weight.toFixed(2)}KG`;
+  weightStatus.textContent = `✅ ${len}cm×${wid}cm = ${area.toFixed(2)}㎡ × ${density.toFixed(2)}KG/㎡ = ${weight.toFixed(2)}KG`;
 }
 
 // ============================================================
