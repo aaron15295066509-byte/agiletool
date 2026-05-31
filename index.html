@@ -660,13 +660,13 @@ currencySwap.addEventListener('click', () => {
 });
 
 // 地毯成本
-costLength.addEventListener('input', calcCost);
-costWidth.addEventListener('input', calcCost);
+costLength.addEventListener('input', () => { weightLength.value = costLength.value; calcCost(); calcWeight(); });
+costWidth.addEventListener('input', () => { weightWidth.value = costWidth.value; calcCost(); calcWeight(); });
 costPrice.addEventListener('input', calcCost);
 
 // 地毯重量
-weightLength.addEventListener('input', calcWeight);
-weightWidth.addEventListener('input', calcWeight);
+weightLength.addEventListener('input', () => { costLength.value = weightLength.value; calcWeight(); calcCost(); });
+weightWidth.addEventListener('input', () => { costWidth.value = weightWidth.value; calcWeight(); calcCost(); });
 weightDensity.addEventListener('input', calcWeight);
 
 // 尺寸
