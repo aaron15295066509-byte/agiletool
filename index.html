@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agiletool · 随身工具包</title>
+<style>
+  /* ===== Reset & Base ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f5f7fa;
+    --card: #ffffff;
+    --text: #1e293b;
+    --text-secondary: #64748b;
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --border: #e2e8f0;
+    --success: #22c55e;
+    --radius: 16px;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+    --shadow-lg: 0 10px 25px rgba(0,0,0,.08), 0 4px 10px rgba(0,0,0,.04);
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    --transition: .2s ease;
+  }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 40px;
+  }
+  a { color: var(--primary); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ===== Header ===== */
+  header {
+    text-align: center;
+    margin: 16px 0 28px;
+    max-width: 600px;
+    width: 100%;
+  }
+  header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  header h1 .logo {
+    background: linear-gradient(135deg, var(--primary), #8b5cf6);
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 800;
+  }
+  header p {
+    color: var(--text-secondary);
+    font-size: 15px;
+    margin-top: 6px;
+  }
+
+  /* ===== Cards ===== */
+  .container {
+    max-width: 600px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    padding: 24px;
+    transition: box-shadow var(--transition);
+  }
+  .card:hover { box-shadow: 0 12px 30px rgba(0,0,0,.1), 0 4px 12px rgba(0,0,0,.06); }
+  .card-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+  }
+  .card-title .icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: #fff;
+  }
+  .icon-currency { background: linear-gradient(135deg, #3b82f6, #6366f1); }
+  .icon-length { background: linear-gradient(135deg, #22c55e, #10b981); }
+
+  /* ===== Converter Rows ===== */
+  .converter-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .converter-row:last-child { margin-bottom: 0; }
+  .converter-row .label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    min-width: 48px;
+  }
+  .converter-row input,
+  .converter-row select {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color var(--transition), box-shadow var(--transition);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .converter-row input:focus,
+  .converter-row select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+  }
+  .converter-row input { font-weight: 500; }
+  .converter-row input.error { border-color: #ef4444; }
+
+  .btn-swap {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--text-secondary);
+    transition: all var(--transition);
+    flex-shrink: 0;
+  }
+  .btn-swap:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+
+  /* ===== Result ===== */
+  .result-box {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .result-box .result-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--primary);
+  }
+  .result-box .result-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .result-box .result-meta {
+    font-size: 12px;
+    color: var(--text-secondary);
+    width: 100%;
+    margin-top: 2px;
+  }
+
+  /* ===== Status ===== */
+  .status {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 10px;
+    min-height: 20px;
+  }
+  .status .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .status.error { color: #ef4444; }
+  .status.success { color: var(--success); }
+
+  /* ===== Footer ===== */
+  footer {
+    margin-top: 28px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-secondary);
+    max-width: 600px;
+    width: 100%;
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 480px) {
+    body { padding: 16px 12px 32px; }
+    .card { padding: 18px; }
+    .converter-row { flex-wrap: wrap; }
+    .converter-row .label { min-width: 100%; font-size: 12px; }
+    .result-box .result-value { font-size: 19px; }
+    header h1 { font-size: 23px; }
+    .btn-swap { width: 36px; height: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span class="logo">A</span> Agiletool</h1>
+  <p>随身工具包 · 汇率 &amp; 尺寸转换</p>
+</header>
+
+<div class="container">
+
+  <!-- ==================== 汇率转换 ==================== -->
+  <div class="card" id="currency-card">
+    <div class="card-title"><span class="icon icon-currency">💱</span> 汇率转换</div>
+
+    <div class="converter-row">
+      <span class="label">金额</span>
+      <input type="number" id="currency-amount" value="1" min="0" step="any" placeholder="输入金额">
+    </div>
+
+    <div class="converter-row">
+      <span class="label">从</span>
+      <select id="currency-from"></select>
+      <button class="btn-swap" id="currency-swap" title="互换货币">⇄</button>
+      <span class="label">到</span>
+      <select id="currency-to"></select>
+    </div>
+
+    <div class="result-box">
+      <div>
+        <div class="result-label" id="currency-result-label">1 CNY =</div>
+        <div class="result-meta" id="currency-rate-meta"></div>
+      </div>
+      <span class="result-value" id="currency-result">—</span>
+    </div>
+
+    <div class="status" id="currency-status">
+      <span class="spinner"></span> 获取汇率中...
+    </div>
+  </div>
+
+  <!-- ==================== 尺寸转换 ==================== -->
+  <div class="card" id="length-card">
+    <div class="card-title"><span class="icon icon-length">📏</span> 尺寸转换</div>
+
+    <div class="converter-row">
+      <span class="label">数值</span>
+      <input type="number" id="length-value" value="1" min="0" step="any" placeholder="输入数值">
+    </div>
+
+    <div class="converter-row">
+      <span class="label">从</span>
+      <select id="length-from"></select>
+      <button class="btn-swap" id="length-swap" title="互换单位">⇄</button>
+      <span class="label">到</span>
+      <select id="length-to"></select>
+    </div>
+
+    <div class="result-box">
+      <div>
+        <div class="result-label" id="length-result-label">1 厘米 =</div>
+        <div class="result-meta" id="length-rate-meta">固定换算率</div>
+      </div>
+      <span class="result-value" id="length-result">—</span>
+    </div>
+
+    <div class="status" id="length-status">✅ 离线可用，无需网络</div>
+  </div>
+</div>
+
+<footer>
+  <a href="https://open.er-api.com" target="_blank" rel="noopener">汇率数据来源: ExchangeRate-API</a>
+  · 尺寸换算为固定值
+</footer>
+
+<script>
+// ============================================================
+// 1. 币种 & 单位定义
+// ============================================================
+
+const CURRENCIES = [
+  { code: 'CNY', name: '人民币', flag: '🇨🇳' },
+  { code: 'USD', name: '美元', flag: '🇺🇸' },
+  { code: 'EUR', name: '欧元', flag: '🇪🇺' },
+  { code: 'GBP', name: '英镑', flag: '🇬🇧' },
+  { code: 'JPY', name: '日元', flag: '🇯🇵' },
+  { code: 'KRW', name: '韩元', flag: '🇰🇷' },
+  { code: 'HKD', name: '港币', flag: '🇭🇰' },
+  { code: 'TWD', name: '新台币', flag: '🇹🇼' },
+  { code: 'AUD', name: '澳元', flag: '🇦🇺' },
+  { code: 'CAD', name: '加元', flag: '🇨🇦' },
+  { code: 'SGD', name: '新加坡元', flag: '🇸🇬' },
+  { code: 'CHF', name: '瑞士法郎', flag: '🇨🇭' },
+  { code: 'NZD', name: '新西兰元', flag: '🇳🇿' },
+  { code: 'THB', name: '泰铢', flag: '🇹🇭' },
+  { code: 'MYR', name: '马来西亚林吉特', flag: '🇲🇾' },
+  { code: 'PHP', name: '菲律宾比索', flag: '🇵🇭' },
+  { code: 'INR', name: '印度卢比', flag: '🇮🇳' },
+  { code: 'MXN', name: '墨西哥比索', flag: '🇲🇽' },
+  { code: 'BRL', name: '巴西雷亚尔', flag: '🇧🇷' },
+  { code: 'RUB', name: '俄罗斯卢布', flag: '🇷🇺' },
+  { code: 'VND', name: '越南盾', flag: '🇻🇳' },
+];
+
+// 所有长度单位以「厘米」为基准的换算系数
+const LENGTH_UNITS = [
+  { unit: 'cm',  name: '厘米',     toBase: 1 },
+  { unit: 'inch', name: '英寸',   toBase: 2.54 },
+  { unit: 'mm',   name: '毫米',   toBase: 0.1 },
+  { unit: 'm',    name: '米',     toBase: 100 },
+  { unit: 'km',   name: '千米',   toBase: 100000 },
+  { unit: 'ft',   name: '英尺',   toBase: 30.48 },
+  { unit: 'yd',   name: '码',     toBase: 91.44 },
+  { unit: 'mile', name: '英里',   toBase: 160934.4 },
+  { unit: 'li',   name: '市里',   toBase: 50000 },
+  { unit: 'cun',  name: '寸',     toBase: 3.3333 },
+  { unit: 'chi',  name: '尺',     toBase: 33.333 },
+];
+
+// ============================================================
+// 2. DOM 引用
+// ============================================================
+
+const $ = id => document.getElementById(id);
+const currencyAmount  = $('currency-amount');
+const currencyFrom    = $('currency-from');
+const currencyTo      = $('currency-to');
+const currencySwap    = $('currency-swap');
+const currencyResult  = $('currency-result');
+const currencyResultLabel = $('currency-result-label');
+const currencyRateMeta    = $('currency-rate-meta');
+const currencyStatus      = $('currency-status');
+
+const lengthValue     = $('length-value');
+const lengthFrom      = $('length-from');
+const lengthTo        = $('length-to');
+const lengthSwap      = $('length-swap');
+const lengthResult    = $('length-result');
+const lengthResultLabel = $('length-result-label');
+const lengthRateMeta     = $('length-rate-meta');
+const lengthStatus       = $('length-status');
+
+// ============================================================
+// 3. 渲染下拉框
+// ============================================================
+
+function populateSelect(select, items, valueKey, labelFn) {
+  select.innerHTML = items.map(item => {
+    const value = item[valueKey];
+    const label = labelFn(item);
+    return `<option value="${value}">${label}</option>`;
+  }).join('');
+}
+
+populateSelect(currencyFrom, CURRENCIES, 'code', c => `${c.flag} ${c.code} - ${c.name}`);
+populateSelect(currencyTo,   CURRENCIES, 'code', c => `${c.flag} ${c.code} - ${c.name}`);
+currencyFrom.value = 'CNY';
+currencyTo.value   = 'USD';
+
+populateSelect(lengthFrom, LENGTH_UNITS, 'unit', u => `${u.unit} (${u.name})`);
+populateSelect(lengthTo,   LENGTH_UNITS, 'unit', u => `${u.unit} (${u.name})`);
+lengthFrom.value = 'cm';
+lengthTo.value   = 'inch';
+
+// ============================================================
+// 4. 汇率转换
+// ============================================================
+
+let rateCache = null;     // { rates: { USD: 1, CNY: 7.24, ... }, timestamp }
+const CACHE_TTL = 30 * 60 * 1000; // 30 分钟
+
+async function fetchRates() {
+  const now = Date.now();
+  if (rateCache && (now - rateCache.timestamp) < CACHE_TTL) return rateCache.rates;
+
+  currencyStatus.innerHTML = '<span class="spinner"></span> 获取汇率中...';
+  currencyStatus.className = 'status';
+
+  const url = 'https://open.er-api.com/v6/latest/USD';
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  const data = await resp.json();
+  if (data.result !== 'success') throw new Error(`API error: ${data['error-type'] || data.result}`);
+
+  rateCache = { rates: data.rates, timestamp: now };
+  currencyStatus.innerHTML = `✅ 已更新 · ${new Date().toLocaleTimeString('zh-CN')}`;
+  currencyStatus.className = 'status success';
+  return data.rates;
+}
+
+function formatCurrency(value, code) {
+  const localeMap = {
+    CNY: 'zh-CN', USD: 'en-US', EUR: 'de-DE', GBP: 'en-GB',
+    JPY: 'ja-JP', KRW: 'ko-KR', HKD: 'zh-HK', TWD: 'zh-TW',
+  };
+  const loc = localeMap[code] || 'en-US';
+  try {
+    return new Intl.NumberFormat(loc, { style: 'currency', currency: code, minimumFractionDigits: 2, maximumFractionDigits: 6 }).format(value);
+  } catch {
+    return `${value.toFixed(6)} ${code}`;
+  }
+}
+
+async function convertCurrency() {
+  const amount = parseFloat(currencyAmount.value);
+  if (isNaN(amount) || amount < 0) {
+    currencyAmount.classList.add('error');
+    currencyResult.textContent = '—';
+    currencyResultLabel.textContent = '请输入有效金额';
+    currencyRateMeta.textContent = '';
+    return;
+  }
+  currencyAmount.classList.remove('error');
+
+  const from = currencyFrom.value;
+  const to   = currencyTo.value;
+
+  try {
+    const rates = await fetchRates();
+    const fromRate = rates[from];
+    const toRate   = rates[to];
+    if (!fromRate) throw new Error(`汇率 ${from} 不可用`);
+    if (!toRate)   throw new Error(`汇率 ${to} 不可用`);
+
+    // rates 都是以 USD 为基准，所以：
+    // 1 USD = fromRate (单位 from 币)
+    // 1 USD = toRate   (单位 to 币)
+    // 所以 1 from = toRate / fromRate to 币
+    const rate = toRate / fromRate;
+    const result = amount * rate;
+
+    currencyResult.textContent = formatCurrency(result, to);
+    currencyResultLabel.textContent = `1 ${from} = ${rate.toFixed(6)} ${to}`;
+
+    const now = new Date();
+    currencyRateMeta.textContent = `更新于 ${now.toLocaleString('zh-CN')} · 参考汇率`;
+    currencyStatus.className = 'status success';
+  } catch (err) {
+    currencyStatus.innerHTML = `⚠️ 获取汇率失败: ${err.message}`;
+    currencyStatus.className = 'status error';
+    currencyResult.textContent = '—';
+    currencyResultLabel.textContent = '汇率暂不可用';
+    currencyRateMeta.textContent = '';
+  }
+}
+
+// ============================================================
+// 5. 尺寸转换
+// ============================================================
+
+function convertLength() {
+  const value = parseFloat(lengthValue.value);
+  if (isNaN(value) || value < 0) {
+    lengthValue.classList.add('error');
+    lengthResult.textContent = '—';
+    lengthResultLabel.textContent = '请输入有效数值';
+    return;
+  }
+  lengthValue.classList.remove('error');
+
+  const fromCode = lengthFrom.value;
+  const toCode   = lengthTo.value;
+
+  const fromUnit = LENGTH_UNITS.find(u => u.unit === fromCode);
+  const toUnit   = LENGTH_UNITS.find(u => u.unit === toCode);
+
+  // 先转到厘米，再转到目标单位
+  const cm = value * fromUnit.toBase;
+  const result = cm / toUnit.toBase;
+
+  // 格式化
+  let display;
+  if (result >= 1000000)      display = result.toLocaleString('zh-CN', { maximumFractionDigits: 2 }) + ` ${toCode}`;
+  else if (result >= 1000)    display = result.toLocaleString('zh-CN', { maximumFractionDigits: 2 }) + ` ${toCode}`;
+  else if (result >= 1)       display = result.toFixed(4) + ` ${toCode}`;
+  else if (result >= 0.001)   display = result.toFixed(6) + ` ${toCode}`;
+  else                        display = result.toExponential(4) + ` ${toCode}`;
+
+  lengthResult.textContent = display;
+  lengthResultLabel.textContent = `1 ${fromCode} = ${(fromUnit.toBase / toUnit.toBase).toFixed(6)} ${toCode}`;
+}
+
+// ============================================================
+// 6. 事件绑定
+// ============================================================
+
+// 汇率
+currencyAmount.addEventListener('input', convertCurrency);
+currencyFrom.addEventListener('change', convertCurrency);
+currencyTo.addEventListener('change', convertCurrency);
+currencySwap.addEventListener('click', () => {
+  const tmp = currencyFrom.value;
+  currencyFrom.value = currencyTo.value;
+  currencyTo.value   = tmp;
+  convertCurrency();
+});
+
+// 尺寸
+lengthValue.addEventListener('input', convertLength);
+lengthFrom.addEventListener('change', convertLength);
+lengthTo.addEventListener('change', convertLength);
+lengthSwap.addEventListener('click', () => {
+  const tmp = lengthFrom.value;
+  lengthFrom.value = lengthTo.value;
+  lengthTo.value   = tmp;
+  convertLength();
+});
+
+// ============================================================
+// 7. 启动
+// ============================================================
+
+convertCurrency();
+convertLength();
+
+// 每 30 分钟自动刷新汇率
+setInterval(() => { rateCache = null; convertCurrency(); }, CACHE_TTL);
+</script>
+</body>
+</html>
