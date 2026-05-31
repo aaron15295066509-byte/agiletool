@@ -255,15 +255,15 @@
 
     <div class="converter-row">
       <span class="label">长 (厘米)</span>
-      <input type="number" id="cost-length" value="100" min="0" step="1" placeholder="输入地毯长度(cm)">
+      <input type="number" id="cost-length" min="0" step="1" placeholder="输入地毯长度(cm)">
     </div>
     <div class="converter-row">
       <span class="label">宽 (厘米)</span>
-      <input type="number" id="cost-width" value="100" min="0" step="1" placeholder="输入地毯宽度(cm)">
+      <input type="number" id="cost-width" min="0" step="1" placeholder="输入地毯宽度(cm)">
     </div>
     <div class="converter-row">
       <span class="label">面积</span>
-      <span style="flex:1;font-size:15px;padding:10px 12px;color:var(--text-secondary);" id="cost-area-display">1 ㎡</span>
+      <span style="flex:1;font-size:15px;padding:10px 12px;color:var(--text-secondary);" id="cost-area-display">—</span>
     </div>
     <div class="converter-row">
       <span class="label">单价</span>
@@ -276,7 +276,7 @@
         <div class="result-label">地毯成本</div>
         <div class="result-meta">长 × 宽 × 单价</div>
       </div>
-      <span class="result-value" id="cost-result">60 元</span>
+      <span class="result-value" id="cost-result">—</span>
     </div>
     <div class="status" id="cost-status">✅ 输入长宽和单价自动计算</div>
   </div>
@@ -287,15 +287,15 @@
 
     <div class="converter-row">
       <span class="label">长 (厘米)</span>
-      <input type="number" id="weight-length" value="100" min="0" step="1" placeholder="输入地毯长度(cm)">
+      <input type="number" id="weight-length" min="0" step="1" placeholder="输入地毯长度(cm)">
     </div>
     <div class="converter-row">
       <span class="label">宽 (厘米)</span>
-      <input type="number" id="weight-width" value="100" min="0" step="1" placeholder="输入地毯宽度(cm)">
+      <input type="number" id="weight-width" min="0" step="1" placeholder="输入地毯宽度(cm)">
     </div>
     <div class="converter-row">
       <span class="label">面积</span>
-      <span style="flex:1;font-size:15px;padding:10px 12px;color:var(--text-secondary);" id="weight-area-display">1 ㎡</span>
+      <span style="flex:1;font-size:15px;padding:10px 12px;color:var(--text-secondary);" id="weight-area-display">—</span>
     </div>
     <div class="converter-row">
       <span class="label">每㎡重量</span>
@@ -308,7 +308,7 @@
         <div class="result-label">地毯重量</div>
         <div class="result-meta">长 × 宽 × 每㎡重量</div>
       </div>
-      <span class="result-value" id="weight-result">1.75 KG</span>
+      <span class="result-value" id="weight-result">—</span>
     </div>
     <div class="status" id="weight-status">✅ 输入长宽和密度自动计算</div>
   </div>
@@ -607,9 +607,21 @@ function calcCost() {
   const wid = parseFloat(costWidth.value);
   const price = parseFloat(costPrice.value);
 
-  if (isNaN(len) || len <= 0) { costLength.classList.add('error'); return; }
+  if (!costLength.value || isNaN(len) || len <= 0) {
+    costLength.classList.add('error');
+    costAreaDisp.textContent = '—';
+    costResult.textContent = '—';
+    costStatus.textContent = '请输入地毯长宽';
+    return;
+  }
   costLength.classList.remove('error');
-  if (isNaN(wid) || wid <= 0) { costWidth.classList.add('error'); return; }
+  if (!costWidth.value || isNaN(wid) || wid <= 0) {
+    costWidth.classList.add('error');
+    costAreaDisp.textContent = '—';
+    costResult.textContent = '—';
+    costStatus.textContent = '请输入地毯宽度';
+    return;
+  }
   costWidth.classList.remove('error');
   if (isNaN(price) || price < 0) { costPrice.classList.add('error'); return; }
   costPrice.classList.remove('error');
@@ -630,9 +642,21 @@ function calcWeight() {
   const wid = parseFloat(weightWidth.value);
   const density = parseFloat(weightDensity.value);
 
-  if (isNaN(len) || len <= 0) { weightLength.classList.add('error'); return; }
+  if (!weightLength.value || isNaN(len) || len <= 0) {
+    weightLength.classList.add('error');
+    weightAreaDisp.textContent = '—';
+    weightResult.textContent = '—';
+    weightStatus.textContent = '请输入地毯长宽';
+    return;
+  }
   weightLength.classList.remove('error');
-  if (isNaN(wid) || wid <= 0) { weightWidth.classList.add('error'); return; }
+  if (!weightWidth.value || isNaN(wid) || wid <= 0) {
+    weightWidth.classList.add('error');
+    weightAreaDisp.textContent = '—';
+    weightResult.textContent = '—';
+    weightStatus.textContent = '请输入地毯宽度';
+    return;
+  }
   weightWidth.classList.remove('error');
   if (isNaN(density) || density <= 0) { weightDensity.classList.add('error'); return; }
   weightDensity.classList.remove('error');
@@ -686,8 +710,6 @@ lengthSwap.addEventListener('click', () => {
 
 convertCurrency();
 convertLength();
-calcCost();
-calcWeight();
 
 // 每 30 分钟自动刷新汇率
 setInterval(() => { rateCache = null; convertCurrency(); }, CACHE_TTL);
