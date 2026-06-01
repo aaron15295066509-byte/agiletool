@@ -275,7 +275,7 @@
 
 <header>
   <h1><span class="logo">T</span> AgileTranslate</h1>
-  <p>智能翻译 · 自动检测 · 多语言互译</p>
+  <p>智能翻译 · 输入中文自动译英 · 输入英文自动译中</p>
 </header>
 
 <div class="container">
@@ -294,7 +294,7 @@
       <span class="badge" id="detect-badge" style="display:none;">🔍 检测到: —</span>
     </div>
     <div class="textarea-wrap">
-      <textarea id="input-text" placeholder="输入文字，自动翻译…" autofocus></textarea>
+      <textarea id="input-text" placeholder="输入文字，自动识别中英文并翻译…" autofocus></textarea>
     </div>
     <div class="charcount" id="input-count">0 字符</div>
 
@@ -403,10 +403,18 @@ const btnSpeakRes = $('btn-speak-result');
 function populateSelect(sel, langs) {
   sel.innerHTML = langs.map(l => `<option value="${l.code}">${l.name}</option>`).join('');
 }
+
+// Source language: includes auto-detect
 populateSelect(langFrom, LANGUAGES);
-populateSelect(langTo, LANGUAGES);
 langFrom.value = 'auto';
-langTo.value = 'en';
+
+// Target language: first option is auto-swap (中↔英)
+const LANG_TO = [
+  { code: 'auto', name: '🔄 智能互换（中↔英）' },
+  ...LANGUAGES.filter(l => l.code !== 'auto')
+];
+populateSelect(langTo, LANG_TO);
+langTo.value = 'auto';
 
 // ============================================================
 // 4. Simple Chinese detection
@@ -447,9 +455,9 @@ async function doTranslate() {
   }
 
   let from = langFrom.value;
-  const to = langTo.value;
+  let to = langTo.value;
 
-  // Auto-detect
+  // Auto-detect source language first
   if (from === 'auto') {
     const detected = detectLang(text);
     if (detected) {
@@ -460,6 +468,12 @@ async function doTranslate() {
     }
   } else {
     detectBadge.style.display = 'none';
+  }
+
+  // Auto-swap target: 中文→English, English→中文
+  if (to === 'auto') {
+    if (from === 'zh-CN') to = 'en';
+    else to = 'zh-CN'; // English or any other → Chinese
   }
 
   // Map codes for API
