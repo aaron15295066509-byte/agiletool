@@ -109,6 +109,46 @@
   .icon-currency { background: linear-gradient(135deg, #3b82f6, #6366f1); }
   .icon-length { background: linear-gradient(135deg, #22c55e, #10b981); }
 
+  /* ===== 实时汇率条 ===== */
+  .rate-bar {
+    max-width: 600px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    margin: -8px 0 12px;
+    padding: 8px 14px;
+    background: linear-gradient(135deg, #fef9ef, #fff7e6);
+    border-radius: 10px;
+    font-size: 13px;
+    border: 1px solid #fde68a;
+  }
+  .rate-bar .rate-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  .rate-bar .rate-item .pair {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+  .rate-bar .rate-item .value {
+    font-weight: 700;
+    color: #d97706;
+    font-variant-numeric: tabular-nums;
+  }
+  .rate-bar .rate-time {
+    font-size: 11px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+  @media (max-width: 480px) {
+    .rate-bar { font-size: 11px; padding: 6px 10px; gap: 2px; flex-wrap: wrap; justify-content: center; }
+    .rate-bar .rate-item { gap: 2px; }
+  }
+
   /* ===== Converter Rows ===== */
   .converter-row {
     display: flex;
@@ -246,6 +286,14 @@
   <h1><span class="logo">A</span> Agiletool</h1>
   <p>随身工具包 · 地毯成本 · 重量 · 汇率 · 尺寸</p>
 </header>
+
+<div class="rate-bar" id="rate-bar">
+  <div class="rate-item" id="rate-usd"><span class="pair">💵 USD/CNY</span> <span class="value">—</span></div>
+  <div class="rate-item" id="rate-eur"><span class="pair">💶 EUR/CNY</span> <span class="value">—</span></div>
+  <div class="rate-item" id="rate-jpy"><span class="pair">💴 JPY/CNY</span> <span class="value">—</span></div>
+  <div class="rate-item" id="rate-gbp"><span class="pair">💷 GBP/CNY</span> <span class="value">—</span></div>
+  <span class="rate-time" id="rate-time"></span>
+</div>
 
 <div class="container">
 
@@ -449,6 +497,12 @@ const currencyResultLabel = $('currency-result-label');
 const currencyRateMeta    = $('currency-rate-meta');
 const currencyStatus      = $('currency-status');
 
+const rateUSD = $('rate-usd').querySelector('.value');
+const rateEUR = $('rate-eur').querySelector('.value');
+const rateJPY = $('rate-jpy').querySelector('.value');
+const rateGBP = $('rate-gbp').querySelector('.value');
+const rateTime = $('rate-time');
+
 const lengthValue     = $('length-value');
 const lengthFrom      = $('length-from');
 const lengthTo        = $('length-to');
@@ -503,7 +557,19 @@ async function fetchRates() {
   rateCache = { rates: data.rates, timestamp: now };
   currencyStatus.innerHTML = `✅ 已更新 · ${new Date().toLocaleTimeString('zh-CN')}`;
   currencyStatus.className = 'status success';
+  updateRateBar(data.rates);
   return data.rates;
+}
+
+function updateRateBar(rates) {
+  if (!rates) return;
+  const cny = rates['CNY'];
+  if (!cny) return;
+  rateUSD.textContent = (1 / rates['USD'] * cny).toFixed(4);
+  rateEUR.textContent = (1 / rates['EUR'] * cny).toFixed(4);
+  rateJPY.textContent = (1 / rates['JPY'] * cny).toFixed(4);
+  rateGBP.textContent = (1 / rates['GBP'] * cny).toFixed(4);
+  rateTime.textContent = new Date().toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'});
 }
 
 function formatCurrency(value, code) {
