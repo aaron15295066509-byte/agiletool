@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgileTranslate · 智能翻译</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f5f7fa;
+    --card: #ffffff;
+    --text: #1e293b;
+    --text-secondary: #64748b;
+    --primary: #f97316;
+    --primary-hover: #ea580c;
+    --primary-light: #fff7ed;
+    --border: #e2e8f0;
+    --radius: 16px;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+    --shadow-lg: 0 10px 25px rgba(0,0,0,.08), 0 4px 10px rgba(0,0,0,.04);
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    --transition: .2s ease;
+  }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 40px;
+  }
+  header {
+    text-align: center;
+    margin: 16px 0 24px;
+    max-width: 700px;
+    width: 100%;
+  }
+  header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  header h1 .logo {
+    background: linear-gradient(135deg, #f97316, #eab308);
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 800;
+  }
+  header p {
+    color: var(--text-secondary);
+    font-size: 15px;
+    margin-top: 6px;
+  }
+  .container {
+    max-width: 700px;
+    width: 100%;
+  }
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    padding: 24px;
+  }
+
+  /* Language Selector */
+  .lang-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .lang-row select {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    transition: border-color var(--transition);
+  }
+  .lang-row select:focus { border-color: var(--primary); }
+  .btn-swap {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--text-secondary);
+    transition: all var(--transition);
+    flex-shrink: 0;
+  }
+  .btn-swap:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+
+  /* Auto-detect badge */
+  .badge-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    min-height: 22px;
+  }
+  .badge {
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  /* Textareas */
+  .textarea-wrap {
+    position: relative;
+  }
+  textarea {
+    width: 100%;
+    min-height: 140px;
+    padding: 14px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    font-size: 15px;
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    resize: vertical;
+    outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+    line-height: 1.6;
+  }
+  textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(249,115,22,.15);
+  }
+  textarea::placeholder { color: #94a3b8; }
+
+  .result-area {
+    background: var(--primary-light);
+    border: 1.5px solid #fed7aa;
+    min-height: 140px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    position: relative;
+  }
+  .result-area .placeholder {
+    color: #94a3b8;
+  }
+
+  /* Action buttons */
+  .actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .actions button {
+    padding: 8px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: var(--font);
+    background: var(--card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .actions button:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-light);
+  }
+  .actions button:active { transform: scale(.97); }
+
+  /* Divider */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+  .divider::before,
+  .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Char count */
+  .charcount {
+    text-align: right;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  /* Status */
+  .status {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 12px;
+    min-height: 20px;
+  }
+  .status .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .status.error { color: #ef4444; }
+  .status.success { color: #22c55e; }
+
+  footer {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-secondary);
+    max-width: 700px;
+    width: 100%;
+  }
+
+  @media (max-width: 480px) {
+    body { padding: 16px 12px 32px; }
+    .card { padding: 18px; }
+    header h1 { font-size: 23px; }
+    .lang-row { gap: 6px; }
+    textarea, .result-area { min-height: 100px; font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span class="logo">T</span> AgileTranslate</h1>
+  <p>智能翻译 · 自动检测 · 多语言互译</p>
+</header>
+
+<div class="container">
+
+  <div class="card">
+
+    <!-- Language Selector -->
+    <div class="lang-row">
+      <select id="lang-from"></select>
+      <button class="btn-swap" id="btn-swap" title="互换语言">⇄</button>
+      <select id="lang-to"></select>
+    </div>
+
+    <!-- Input -->
+    <div class="badge-row">
+      <span class="badge" id="detect-badge" style="display:none;">🔍 检测到: —</span>
+    </div>
+    <div class="textarea-wrap">
+      <textarea id="input-text" placeholder="输入文字，自动翻译…" autofocus></textarea>
+    </div>
+    <div class="charcount" id="input-count">0 字符</div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button id="btn-clear">🗑️ 清空</button>
+      <button id="btn-paste">📋 粘贴</button>
+      <button id="btn-speak-source" title="朗读原文">🔊 朗读原文</button>
+    </div>
+
+    <!-- Divider -->
+    <div class="divider">↓ 翻译结果</div>
+
+    <!-- Output -->
+    <div class="result-area" id="output-text"><span class="placeholder">等待输入…</span></div>
+    <div class="charcount" id="output-count">0 字符</div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button id="btn-copy">📄 复制结果</button>
+      <button id="btn-speak-result" title="朗读译文">🔊 朗读译文</button>
+    </div>
+
+    <!-- Char swap highlight -->
+
+    <div class="status" id="status">💡 输入文字自动翻译</div>
+
+  </div>
+</div>
+
+<footer>
+  翻译服务: MyMemory API · 免费使用
+</footer>
+
+<script>
+// ============================================================
+// 1. Languages
+// ============================================================
+
+const LANGUAGES = [
+  { code: 'auto', name: '🌐 自动检测' },
+  { code: 'zh-CN', name: '🇨🇳 中文(简体)' },
+  { code: 'en',    name: '🇺🇸 英语' },
+  { code: 'ja',    name: '🇯🇵 日语' },
+  { code: 'ko',    name: '🇰🇷 韩语' },
+  { code: 'fr',    name: '🇫🇷 法语' },
+  { code: 'de',    name: '🇩🇪 德语' },
+  { code: 'es',    name: '🇪🇸 西班牙语' },
+  { code: 'pt',    name: '🇵🇹 葡萄牙语' },
+  { code: 'it',    name: '🇮🇹 意大利语' },
+  { code: 'ru',    name: '🇷🇺 俄语' },
+  { code: 'ar',    name: '🇸🇦 阿拉伯语' },
+  { code: 'th',    name: '🇹🇭 泰语' },
+  { code: 'vi',    name: '🇻🇳 越南语' },
+  { code: 'id',    name: '🇮🇩 印尼语' },
+  { code: 'ms',    name: '🇲🇾 马来语' },
+  { code: 'tr',    name: '🇹🇷 土耳其语' },
+  { code: 'nl',    name: '🇳🇱 荷兰语' },
+  { code: 'pl',    name: '🇵🇱 波兰语' },
+  { code: 'sv',    name: '🇸🇪 瑞典语' },
+  { code: 'da',    name: '🇩🇰 丹麦语' },
+  { code: 'fi',    name: '🇫🇮 芬兰语' },
+  { code: 'cs',    name: '🇨🇿 捷克语' },
+  { code: 'hu',    name: '🇭🇺 匈牙利语' },
+  { code: 'ro',    name: '🇷🇴 罗马尼亚语' },
+  { code: 'uk',    name: '🇺🇦 乌克兰语' },
+  { code: 'el',    name: '🇬🇷 希腊语' },
+  { code: 'he',    name: '🇮🇱 希伯来语' },
+  { code: 'hi',    name: '🇮🇳 印地语' },
+];
+
+// Map API codes to MyMemory codes
+const MMAP = {
+  'zh-CN': 'zh-CN', 'en': 'en', 'ja': 'ja', 'ko': 'ko',
+  'fr': 'fr', 'de': 'de', 'es': 'es', 'pt': 'pt', 'it': 'it',
+  'ru': 'ru', 'ar': 'ar', 'th': 'th', 'vi': 'vi', 'id': 'id',
+  'ms': 'ms', 'tr': 'tr', 'nl': 'nl', 'pl': 'pl', 'sv': 'sv',
+  'da': 'da', 'fi': 'fi', 'cs': 'cs', 'hu': 'hu', 'ro': 'ro',
+  'uk': 'uk', 'el': 'el', 'he': 'he', 'hi': 'hi',
+};
+
+// ============================================================
+// 2. DOM refs
+// ============================================================
+
+const $ = id => document.getElementById(id);
+const langFrom    = $('lang-from');
+const langTo      = $('lang-to');
+const btnSwap     = $('btn-swap');
+const inputText   = $('input-text');
+const outputText  = $('output-text');
+const status      = $('status');
+const detectBadge = $('detect-badge');
+const inputCount  = $('input-count');
+const outputCount = $('output-count');
+const btnClear    = $('btn-clear');
+const btnPaste    = $('btn-paste');
+const btnCopy     = $('btn-copy');
+const btnSpeakSrc = $('btn-speak-source');
+const btnSpeakRes = $('btn-speak-result');
+
+// ============================================================
+// 3. Populate selects
+// ============================================================
+
+function populateSelect(sel, langs) {
+  sel.innerHTML = langs.map(l => `<option value="${l.code}">${l.name}</option>`).join('');
+}
+populateSelect(langFrom, LANGUAGES);
+populateSelect(langTo, LANGUAGES);
+langFrom.value = 'auto';
+langTo.value = 'en';
+
+// ============================================================
+// 4. Simple Chinese detection
+// ============================================================
+
+function detectLang(text) {
+  if (!text.trim()) return null;
+  const cn = (text.match(/[\u4e00-\u9fff\u3000-\u303f]/g) || []).length;
+  const en = (text.match(/[a-zA-Z]/g) || []).length;
+  const ja = (text.match(/[\u3040-\u309f\u30a0-\u30ff]/g) || []).length;
+  const ko = (text.match(/[\uac00-\ud7af]/g) || []).length;
+  const ru = (text.match(/[\u0400-\u04ff]/g) || []).length;
+
+  if (ja > cn && ja > en) return 'ja';
+  if (ko > cn && ko > en) return 'ko';
+  if (ru > cn && ru > en) return 'ru';
+  // If more Chinese chars than English, it's Chinese
+  if (cn > en && cn > 0) return 'zh-CN';
+  // If more English or neither, default English
+  return 'en';
+}
+
+// ============================================================
+// 5. Translate
+// ============================================================
+
+let timer = null;
+
+async function doTranslate() {
+  const text = inputText.value.trim();
+  if (!text) {
+    outputText.innerHTML = '<span class="placeholder">等待输入…</span>';
+    status.textContent = '💡 输入文字自动翻译';
+    status.className = 'status';
+    outputCount.textContent = '0 字符';
+    detectBadge.style.display = 'none';
+    return;
+  }
+
+  let from = langFrom.value;
+  const to = langTo.value;
+
+  // Auto-detect
+  if (from === 'auto') {
+    const detected = detectLang(text);
+    if (detected) {
+      from = detected;
+      const langName = LANGUAGES.find(l => l.code === detected);
+      detectBadge.style.display = 'inline';
+      detectBadge.textContent = `🔍 检测到: ${langName ? langName.name : detected}`;
+    }
+  } else {
+    detectBadge.style.display = 'none';
+  }
+
+  // Map codes for API
+  const apiFrom = MMAP[from] || from;
+  const apiTo = MMAP[to] || to;
+
+  if (apiFrom === apiTo && from !== 'auto') {
+    outputText.textContent = text;
+    status.textContent = '⚠️ 源语言和目标语言相同';
+    status.className = 'status';
+    return;
+  }
+
+  status.innerHTML = '<span class="spinner"></span> 翻译中…';
+  status.className = 'status';
+
+  try {
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${apiFrom}|${apiTo}`;
+    const resp = await fetch(url);
+    const data = await resp.json();
+
+    if (data.responseStatus === 200 && data.responseData) {
+      let result = data.responseData.translatedText || '';
+      // Clean up MyMemory artifacts
+      result = result.replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+      outputText.textContent = result;
+      outputCount.textContent = `${result.length} 字符`;
+      status.textContent = `✅ 翻译完成 · ${data.responseDetails || ''}`.trim() || '✅ 翻译完成';
+      status.className = 'status success';
+    } else {
+      throw new Error(data.responseDetails || '翻译失败');
+    }
+  } catch (err) {
+    status.textContent = `⚠️ ${err.message}`;
+    status.className = 'status error';
+    outputText.textContent = text;
+  }
+}
+
+function scheduleTranslate() {
+  clearTimeout(timer);
+  timer = setTimeout(doTranslate, 500);
+}
+
+// ============================================================
+// 6. Textarea auto-resize
+// ============================================================
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.max(140, el.scrollHeight) + 'px';
+}
+
+// ============================================================
+// 7. Events
+// ============================================================
+
+// Input
+inputText.addEventListener('input', () => {
+  scheduleTranslate();
+  autoResize(inputText);
+  inputCount.textContent = `${inputText.value.length} 字符`;
+});
+
+// Language change
+langFrom.addEventListener('change', () => {
+  if (langFrom.value !== 'auto') detectBadge.style.display = 'none';
+  doTranslate();
+});
+langTo.addEventListener('change', doTranslate);
+
+// Swap
+btnSwap.addEventListener('click', () => {
+  const tmp = langFrom.value;
+  langFrom.value = langTo.value;
+  langTo.value = tmp;
+  if (langFrom.value === 'auto') detectBadge.style.display = 'inline';
+  else detectBadge.style.display = 'none';
+  doTranslate();
+});
+
+// Clear
+btnClear.addEventListener('click', () => {
+  inputText.value = '';
+  inputText.style.height = 'auto';
+  inputCount.textContent = '0 字符';
+  outputText.innerHTML = '<span class="placeholder">等待输入…</span>';
+  outputCount.textContent = '0 字符';
+  status.textContent = '💡 输入文字自动翻译';
+  status.className = 'status';
+  detectBadge.style.display = 'none';
+  inputText.focus();
+});
+
+// Paste
+btnPaste.addEventListener('click', async () => {
+  try {
+    const text = await navigator.clipboard.readText();
+    inputText.value = text;
+    inputCount.textContent = `${text.length} 字符`;
+    autoResize(inputText);
+    doTranslate();
+  } catch {
+    status.textContent = '⚠️ 无法读取剪贴板，请手动粘贴';
+    status.className = 'status error';
+  }
+});
+
+// Copy
+btnCopy.addEventListener('click', async () => {
+  const text = outputText.textContent;
+  if (!text || text === '等待输入…') return;
+  try {
+    await navigator.clipboard.writeText(text);
+    const orig = btnCopy.innerHTML;
+    btnCopy.innerHTML = '✅ 已复制';
+    setTimeout(() => btnCopy.innerHTML = orig, 1500);
+  } catch {
+    status.textContent = '⚠️ 复制失败';
+    status.className = 'status error';
+  }
+});
+
+// Speak
+function speak(text, lang) {
+  if (!text || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang;
+  u.rate = 0.9;
+  speechSynthesis.speak(u);
+}
+
+btnSpeakSrc.addEventListener('click', () => {
+  const text = inputText.value.trim();
+  if (!text) return;
+  let lang = langFrom.value;
+  if (lang === 'auto') {
+    const d = detectLang(text);
+    lang = d === 'zh-CN' ? 'zh-CN' : 'en-US';
+  }
+  speak(text, lang);
+});
+
+btnSpeakRes.addEventListener('click', () => {
+  const text = outputText.textContent;
+  if (!text || text === '等待输入…') return;
+  const to = langTo.value;
+  const langMap = { 'zh-CN': 'zh-CN', 'en': 'en-US', 'ja': 'ja-JP', 'ko': 'ko-KR', 'fr': 'fr-FR', 'de': 'de-DE', 'es': 'es-ES', 'it': 'it-IT', 'ru': 'ru-RU', 'ar': 'ar-SA' };
+  speak(text, langMap[to] || to);
+});
+
+// ============================================================
+// 8. Init
+// ============================================================
+
+inputText.focus();
+</script>
+</body>
+</html>
