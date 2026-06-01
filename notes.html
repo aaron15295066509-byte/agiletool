@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>灵光记事本</title>
+<title>agilepad · 在线记事本</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -493,7 +493,7 @@
   <div class="header">
     <div class="logo">
       <div class="logo-icon">💡</div>
-      <div class="logo-text">灵光<span>记事本</span></div>
+      <div class="logo-text">agile<span>pad</span></div>
     </div>
     <div class="header-actions">
       <button class="header-btn" onclick="exportNotes()">📤 导出</button>
@@ -646,7 +646,7 @@ function exportNotes() {
   const notes = loadNotes();
   if (!notes.length) { alert('还没有笔记可导出'); return; }
 
-  let text = '📋 灵光记事本 导出\n';
+  let text = '📋 agilepad 导出\n';
   text += '═'.repeat(30) + '\n\n';
   notes.forEach((n, i) => {
     const tag = TAG_NAMES[n.tag] || '📌';
