@@ -377,8 +377,11 @@
 
     <div class="converter-row">
       <span class="label">输入尺寸</span>
-      <input type="text" id="size-input" placeholder='例如: 60X60 cm 或 23.6X23.6 inch'
-        style="width:100%;font-family:var(--font);padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:16px;outline:none;transition:var(--transition);box-sizing:border-box;">
+      <div style="display:flex;gap:8px;width:100%;">
+        <input type="text" id="size-input" placeholder='例如: 60X60 cm 或 23.6X23.6 inch'
+          style="flex:1;font-family:var(--font);padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:16px;outline:none;transition:var(--transition);box-sizing:border-box;">
+        <button id="size-clear" style="padding:12px 18px;border:none;border-radius:12px;background:#f1f5f9;color:#64748b;font-size:18px;cursor:pointer;transition:var(--transition);flex-shrink:0;hover:background:#e2e8f0;" title="清空">✕</button>
+      </div>
     </div>
 
     <div class="result-box">
@@ -778,6 +781,14 @@ weightDensity.addEventListener('input', calcWeight);
 
 // 尺寸转换（新版文本输入）
 sizeInput.addEventListener('input', convertSize);
+
+// 清空按钮
+document.getElementById('size-clear').addEventListener('click', () => {
+  sizeInput.value = '';
+  sizeResult.textContent = '—';
+  sizeMeta.textContent = '自动识别 cm↔inch';
+  sizeStatus.textContent = '✅ 已清空，重新输入即可转换';
+});
 
 // ============================================================
 // 7. 启动
