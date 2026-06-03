@@ -372,31 +372,24 @@
   </div>
 
   <!-- ==================== 尺寸转换 ==================== -->
-  <div class="card" id="length-card">
+  <div class="card" id="size-card">
     <div class="card-title"><span class="icon icon-length">📏</span> 尺寸转换</div>
 
     <div class="converter-row">
-      <span class="label">数值</span>
-      <input type="number" id="length-value" value="1" min="0" step="any" placeholder="输入数值">
-    </div>
-
-    <div class="converter-row">
-      <span class="label">从</span>
-      <select id="length-from"></select>
-      <button class="btn-swap" id="length-swap" title="互换单位">⇄</button>
-      <span class="label">到</span>
-      <select id="length-to"></select>
+      <span class="label">输入尺寸</span>
+      <input type="text" id="size-input" placeholder='例如: 60X60 cm 或 23.6X23.6 inch'
+        style="width:100%;font-family:var(--font);padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:16px;outline:none;transition:var(--transition);box-sizing:border-box;">
     </div>
 
     <div class="result-box">
       <div>
-        <div class="result-label" id="length-result-label">1 厘米 =</div>
-        <div class="result-meta" id="length-rate-meta">固定换算率</div>
+        <div class="result-label">转换结果</div>
+        <div class="result-meta" id="size-meta">自动识别 cm↔inch</div>
       </div>
-      <span class="result-value" id="length-result">—</span>
+      <span class="result-value" id="size-result">—</span>
     </div>
 
-    <div class="status" id="length-status">✅ 离线可用，无需网络</div>
+    <div class="status" id="size-status">✅ 输入 60X60 cm 自动转英寸，输入 inch 自动转厘米</div>
   </div>
 
   <!-- ==================== 汇率转换 ==================== -->
@@ -466,19 +459,8 @@ const CURRENCIES = [
 ];
 
 // 所有长度单位以「厘米」为基准的换算系数
-const LENGTH_UNITS = [
-  { unit: 'cm',  name: '厘米',     toBase: 1 },
-  { unit: 'inch', name: '英寸',   toBase: 2.54 },
-  { unit: 'mm',   name: '毫米',   toBase: 0.1 },
-  { unit: 'm',    name: '米',     toBase: 100 },
-  { unit: 'km',   name: '千米',   toBase: 100000 },
-  { unit: 'ft',   name: '英尺',   toBase: 30.48 },
-  { unit: 'yd',   name: '码',     toBase: 91.44 },
-  { unit: 'mile', name: '英里',   toBase: 160934.4 },
-  { unit: 'li',   name: '市里',   toBase: 50000 },
-  { unit: 'cun',  name: '寸',     toBase: 3.3333 },
-  { unit: 'chi',  name: '尺',     toBase: 33.333 },
-];
+// 尺寸单位（cm↔inch 专用，通过文本输入自动识别）
+// 换算: 1 inch = 2.54 cm
 
 // ============================================================
 // 2. DOM 引用
@@ -514,14 +496,13 @@ const rateJPY = $('rate-jpy').querySelector('.value');
 const rateGBP = $('rate-gbp').querySelector('.value');
 const rateTime = $('rate-time');
 
-const lengthValue     = $('length-value');
-const lengthFrom      = $('length-from');
-const lengthTo        = $('length-to');
-const lengthSwap      = $('length-swap');
-const lengthResult    = $('length-result');
-const lengthResultLabel = $('length-result-label');
-const lengthRateMeta     = $('length-rate-meta');
-const lengthStatus       = $('length-status');
+// ============================================================
+// 2. DOM 引用
+// ============================================================
+const sizeInput  = $('size-input');
+const sizeResult = $('size-result');
+const sizeMeta   = $('size-meta');
+const sizeStatus = $('size-status');
 
 // ============================================================
 // 3. 渲染下拉框
@@ -540,10 +521,7 @@ populateSelect(currencyTo,   CURRENCIES, 'code', c => `${c.flag} ${c.code} - ${c
 currencyFrom.value = 'CNY';
 currencyTo.value   = 'USD';
 
-populateSelect(lengthFrom, LENGTH_UNITS, 'unit', u => `${u.unit} (${u.name})`);
-populateSelect(lengthTo,   LENGTH_UNITS, 'unit', u => `${u.unit} (${u.name})`);
-lengthFrom.value = 'cm';
-lengthTo.value   = 'inch';
+// 尺寸转换（新版：文本输入自动识别）
 
 // ============================================================
 // 4. 汇率转换
@@ -640,39 +618,67 @@ async function convertCurrency() {
 }
 
 // ============================================================
-// 5. 尺寸转换
+// 5. 尺寸转换（文本输入版）
 // ============================================================
 
-function convertLength() {
-  const value = parseFloat(lengthValue.value);
-  if (isNaN(value) || value < 0) {
-    lengthValue.classList.add('error');
-    lengthResult.textContent = '—';
-    lengthResultLabel.textContent = '请输入有效数值';
+function convertSize() {
+  const raw = sizeInput.value.trim();
+  if (!raw) {
+    sizeResult.textContent = '—';
+    sizeMeta.textContent = '自动识别 cm↔inch';
+    sizeStatus.textContent = '✅ 输入 60X60 cm 自动转英寸';
     return;
   }
-  lengthValue.classList.remove('error');
 
-  const fromCode = lengthFrom.value;
-  const toCode   = lengthTo.value;
+  // 解析格式: 数字X数字+单位，支持 x X × * 以及有无空格
+  const match = raw.match(/([\d.]+)\s*[xX×*]\s*([\d.]+)\s*(cm|inch|inches|in|厘米|英寸)?/i);
+  if (!match) {
+    sizeResult.textContent = '⚠️ 格式错误';
+    sizeMeta.textContent = '请用格式: 60X60 cm 或 23.6X23.6 inch';
+    sizeStatus.textContent = '❌ 无法识别，示例: 60X60 cm';
+    return;
+  }
 
-  const fromUnit = LENGTH_UNITS.find(u => u.unit === fromCode);
-  const toUnit   = LENGTH_UNITS.find(u => u.unit === toCode);
+  const v1 = parseFloat(match[1]);
+  const v2 = parseFloat(match[2]);
+  const unitRaw = (match[3] || '').toLowerCase();
 
-  // 先转到厘米，再转到目标单位
-  const cm = value * fromUnit.toBase;
-  const result = cm / toUnit.toBase;
+  // 判断单位
+  const isCm   = unitRaw === 'cm' || unitRaw === '厘米';
+  const isInch = unitRaw === 'inch' || unitRaw === 'inches' || unitRaw === 'in' || unitRaw === '英寸';
 
-  // 格式化
-  let display;
-  if (result >= 1000000)      display = result.toLocaleString('zh-CN', { maximumFractionDigits: 2 }) + ` ${toCode}`;
-  else if (result >= 1000)    display = result.toLocaleString('zh-CN', { maximumFractionDigits: 2 }) + ` ${toCode}`;
-  else if (result >= 1)       display = result.toFixed(4) + ` ${toCode}`;
-  else if (result >= 0.001)   display = result.toFixed(6) + ` ${toCode}`;
-  else                        display = result.toExponential(4) + ` ${toCode}`;
-
-  lengthResult.textContent = display;
-  lengthResultLabel.textContent = `1 ${fromCode} = ${(fromUnit.toBase / toUnit.toBase).toFixed(6)} ${toCode}`;
+  if (isCm) {
+    // cm → inch
+    const i1 = v1 / 2.54;
+    const i2 = v2 / 2.54;
+    sizeResult.textContent = `${i1.toFixed(1)}X${i2.toFixed(1)} inch`;
+    sizeMeta.textContent = `${v1.toFixed(0)}cm × ${v2.toFixed(0)}cm = ${(v1*v2/10000).toFixed(2)}㎡`;
+    sizeStatus.textContent = `✅ ${v1.toFixed(0)}cm → ${i1.toFixed(1)}inch · ${v2.toFixed(0)}cm → ${i2.toFixed(1)}inch`;
+  } else if (isInch) {
+    // inch → cm
+    const c1 = v1 * 2.54;
+    const c2 = v2 * 2.54;
+    sizeResult.textContent = `${c1.toFixed(0)}X${c2.toFixed(0)} cm`;
+    sizeMeta.textContent = `${v1.toFixed(1)}inch × ${v2.toFixed(1)}inch = ${(v1*v2).toFixed(1)} in²`;
+    sizeStatus.textContent = `✅ ${v1.toFixed(1)}inch → ${c1.toFixed(0)}cm · ${v2.toFixed(1)}inch → ${c2.toFixed(0)}cm`;
+  } else {
+    // 未指定单位，根据数值大小猜测
+    if (v1 > 20 && v2 > 20) {
+      // 大概率是cm
+      const i1 = v1 / 2.54;
+      const i2 = v2 / 2.54;
+      sizeResult.textContent = `${i1.toFixed(1)}X${i2.toFixed(1)} inch`;
+      sizeMeta.textContent = `推测为cm → 英寸`;
+      sizeStatus.textContent = `✅ 自动识别为cm: ${v1.toFixed(0)}×${v2.toFixed(0)}cm → ${i1.toFixed(1)}×${i2.toFixed(1)}inch`;
+    } else {
+      // 大概率是inch
+      const c1 = v1 * 2.54;
+      const c2 = v2 * 2.54;
+      sizeResult.textContent = `${c1.toFixed(0)}X${c2.toFixed(0)} cm`;
+      sizeMeta.textContent = `推测为inch → 厘米`;
+      sizeStatus.textContent = `✅ 自动识别为inch: ${v1.toFixed(1)}×${v2.toFixed(1)}inch → ${c1.toFixed(0)}×${c2.toFixed(0)}cm`;
+    }
+  }
 }
 
 // ============================================================
@@ -770,23 +776,14 @@ weightLength.addEventListener('input', () => { costLength.value = weightLength.v
 weightWidth.addEventListener('input', () => { costWidth.value = weightWidth.value; calcWeight(); calcCost(); });
 weightDensity.addEventListener('input', calcWeight);
 
-// 尺寸
-lengthValue.addEventListener('input', convertLength);
-lengthFrom.addEventListener('change', convertLength);
-lengthTo.addEventListener('change', convertLength);
-lengthSwap.addEventListener('click', () => {
-  const tmp = lengthFrom.value;
-  lengthFrom.value = lengthTo.value;
-  lengthTo.value   = tmp;
-  convertLength();
-});
+// 尺寸转换（新版文本输入）
+sizeInput.addEventListener('input', convertSize);
 
 // ============================================================
 // 7. 启动
 // ============================================================
 
 convertCurrency();
-convertLength();
 
 // 每 30 分钟自动刷新汇率
 setInterval(() => { rateCache = null; convertCurrency(); }, CACHE_TTL);
