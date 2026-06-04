@@ -12,7 +12,7 @@
   }
   .wrap{max-width:960px;margin:0 auto}
   h1{font-size:20px;margin-bottom:2px}
-  h1 span{color:#ff9900}
+  h1 span{color:#f90}
   .sub{color:#8899aa;font-size:12px;margin-bottom:20px}
 
   .card{
@@ -25,7 +25,8 @@
   }
 
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  @media(max-width:600px){.grid2{grid-template-columns:1fr}}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  @media(max-width:600px){.grid2,.grid3{grid-template-columns:1fr}}
 
   label{display:block;font-size:12px;color:#8899aa;margin-bottom:3px}
   .ig{margin-bottom:8px}
@@ -34,13 +35,13 @@
     border:1px solid #2a4050;background:#1f3342;
     color:#e8edf0;font-size:14px;outline:0
   }
-  input:focus{border-color:#ff9900}
+  input:focus{border-color:#f90}
   .ir{display:flex;gap:8px}
   .ir .ig{flex:1}
 
   table{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
   thead th{
-    text-align:left;padding:8px 6px;border-bottom:2px solid #ff9900;
+    text-align:left;padding:8px 6px;border-bottom:2px solid #f90;
     color:#8899aa;font-size:11px;text-transform:uppercase;letter-spacing:.5px;
     font-weight:600;white-space:nowrap;position:sticky;top:0;background:#1a2833;z-index:1
   }
@@ -49,7 +50,7 @@
   .tr-alt{background:rgba(255,255,255,.015)}
 
   .flag{font-size:16px;margin-right:3px}
-  .price{font-weight:700;color:#ff9900;font-size:14px}
+  .price{font-weight:700;color:#f90;font-size:14px}
   .cny{color:#8899aa;font-size:11px}
   .profit{font-weight:600}
   .green{color:#4ade80}
@@ -61,31 +62,29 @@
   }
 
   .note{
-    background:rgba(255,153,0,.06);border:1px solid #ff9900;
+    background:rgba(255,153,0,.06);border:1px solid #f90;
     border-radius:6px;padding:8px 12px;font-size:11px;
     color:#8899aa;margin-top:12px;line-height:1.5
   }
 
   .summary-card{
-    display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
     gap:8px;margin-bottom:12px
   }
   .stat{
     background:#1f3342;border-radius:8px;padding:10px;text-align:center
   }
-  .stat .num{font-size:20px;font-weight:700;color:#ff9900}
+  .stat .num{font-size:18px;font-weight:700;color:#f90}
   .stat .lbl{font-size:11px;color:#8899aa;margin-top:2px}
 
   .mob-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  table td, table th{padding:6px 5px}
-
   .good-note{margin-top:4px;font-size:11px;color:#667;line-height:1.4}
 
   @media(max-width:480px){
     body{padding:10px}
     .card{padding:10px}
     table{font-size:12px}
-    table td,table th{padding:4px 4px}
+    table td,table th{padding:4px 3px}
   }
 </style>
 </head>
@@ -100,17 +99,18 @@
   <div class="card-t">📐 产品信息</div>
   <div class="grid2">
     <div class="ir">
-      <div class="ig"><label>宽 (cm)</label><input type="number" id="w" value="120" oninput="calc()"></div>
-      <div class="ig"><label>高 (cm)</label><input type="number" id="h" value="160" oninput="calc()"></div>
+      <div class="ig"><label>宽 (cm)</label><input type="number" id="w" value="60" oninput="calc()"></div>
+      <div class="ig"><label>高 (cm)</label><input type="number" id="h" value="60" oninput="calc()"></div>
     </div>
-    <div class="ig"><label>克重 (g/m²)</label><input type="number" id="gsm" value="800" oninput="calc()"></div>
+    <div class="ig"><label>克重 (g/m²)</label><input type="number" id="gsm" value="1750" oninput="calc()"></div>
   </div>
-  <div class="grid2">
+  <div class="grid3">
     <div class="ig"><label>采购价 (元/m²)</label><input type="number" id="cost" value="60" oninput="calc()"></div>
     <div class="ig"><label>头程运费 (元/kg)</label><input type="number" id="ship" value="20" oninput="calc()"></div>
+    <div class="ig"><label>广告费预估 (%)</label><input type="number" id="ad" value="20" oninput="calc()"></div>
   </div>
-  <div class="grid2" style="margin-top:6px">
-    <div class="ig"><label>目标净利润率 (%)</label><input type="number" id="profit" value="20" oninput="calc()"></div>
+  <div class="grid2" style="margin-top:2px">
+    <div class="ig"><label>目标净利润率 (%)</label><input type="number" id="profit" value="30" oninput="calc()"></div>
     <div></div>
   </div>
 </div>
@@ -130,9 +130,10 @@
         <th>到岸成本</th>
         <th>VAT</th>
         <th>佣金</th>
+        <th>广告费</th>
         <th>FBA费</th>
         <th>建议售价</th>
-        <th>人民币售价</th>
+        <th>≈人民币</th>
         <th>净利润</th>
         <th>净利率</th>
       </tr>
@@ -141,7 +142,7 @@
   </table>
   </div>
   <div class="good-note">
-    💡 体积重 = 长×宽×2.5cm ÷ 5000。FBA按体积重与实重的较大值计费。所有费用为估算值，实际以亚马逊官方为准。
+    💡 体积重 = 长×宽×2.5cm ÷ 5000。FBA按体积重与实重的较大值计费。价格均为含VAT售价。所有费用为估算值，以亚马逊官方为准。
   </div>
 </div>
 
@@ -171,40 +172,40 @@ const COUNTRIES = [
    fbaS:4.50,fbaSk:0.88,fbaL:6.30,fbaLk:1.15,fbaO:12.50,fbaOk:0.78}
 ];
 
-function $(id){return document.getElementById(id)}
 function fmt(n,d){d=d||2;return Number(n).toFixed(d)}
 
 function calc(){
-  const w=parseFloat($('w').value)||0,h=parseFloat($('h').value)||0,
-        g=parseFloat($('gsm').value)||0,
-        cp=parseFloat($('cost').value)||0,
-        sp=parseFloat($('ship').value)||0,
-        tp=parseFloat($('profit').value)||0;
+  const w=parseFloat(document.getElementById('w').value)||0;
+  const h=parseFloat(document.getElementById('h').value)||0;
+  const g=parseFloat(document.getElementById('gsm').value)||0;
+  const cp=parseFloat(document.getElementById('cost').value)||0;
+  const sp=parseFloat(document.getElementById('ship').value)||0;
+  const ad=parseFloat(document.getElementById('ad').value)||0;
+  const tp=parseFloat(document.getElementById('profit').value)||0;
 
   if(!w||!h||!g)return;
 
   const area=w*h/10000;
-  const aW=area*g/1000;          // actual weight kg
-  const vW=w*h*2.5/5000;         // volumetric weight kg
-  const bW=Math.max(aW,vW);      // billable weight
+  const aW=area*g/1000;
+  const vW=w*h*2.5/5000;
+  const bW=Math.max(aW,vW);
   const pCost=area*cp;
   const sCost=aW*sp;
   const lCost=pCost+sCost;
 
   // Summary
-  $('summaryBox').innerHTML=
-    `<div class="stat"><div class="num">${fmt(area)}</div><div class="lbl">面积 (m²)</div></div>
-     <div class="stat"><div class="num">${fmt(aW)}</div><div class="lbl">实重 (kg)</div></div>
-     <div class="stat"><div class="num">${fmt(vW)}</div><div class="lbl">体积重 (kg)</div></div>
-     <div class="stat"><div class="num">¥${fmt(lCost)}</div><div class="lbl">到岸成本</div></div>`;
+  document.getElementById('summaryBox').innerHTML=
+    `<div class="stat"><div class="num">${fmt(area,3)}m²</div><div class="lbl">面积</div></div>
+     <div class="stat"><div class="num">${fmt(aW,2)}kg</div><div class="lbl">实重</div></div>
+     <div class="stat"><div class="num">${fmt(vW,2)}kg</div><div class="lbl">体积重</div></div>
+     <div class="stat"><div class="num">¥${fmt(lCost,1)}</div><div class="lbl">到岸成本</div></div>`;
 
   // Table
   const referral=0.15;
+  const adPct=ad/100;
   let rows='';
   COUNTRIES.forEach((c,i)=>{
-    // FBA tier
-    let fba;
-    let tier='S';
+    let fba,tier='S';
     if(bW<=1.2){fba=c.fbaS+c.fbaSk*bW}
     else if(bW<=3){fba=c.fbaL+c.fbaLk*bW;tier='L'}
     else{fba=c.fbaO+c.fbaOk*bW;tier='O'}
@@ -212,31 +213,32 @@ function calc(){
     const vatP=c.vat/100;
     const targetP=tp/100;
     const fbaCNY=fba*c.rate;
-    const denom=1-vatP-referral-targetP;
+    const denom=1-vatP-referral-adPct-targetP;
 
-    let priceLoc=0,priceRMB=0,pRMB=0,pPct=0;
+    let priceLoc=0,priceRMB=0,pRMB=0,pPct=0,adAmt=0;
     if(denom>0){
       priceRMB=(fbaCNY+lCost)/denom;
       priceLoc=priceRMB/c.rate;
-      pRMB=priceLoc*(1-vatP-referral)*c.rate-fbaCNY-lCost;
+      adAmt=priceLoc*adPct;
+      pRMB=priceLoc*(1-vatP-referral-adPct)*c.rate-fbaCNY-lCost;
       pPct=pRMB/(priceLoc*c.rate)*100;
     }
 
-    const alt=i%2?'tr-alt':'';
-    rows+=`<tr class="${alt}">
+    rows+=`<tr class="${i%2?'tr-alt':''}">
       <td><span class="flag">${c.flag}</span>${c.name}</td>
       <td class="dim">${c.cur}</td>
-      <td class="dim">¥${fmt(lCost)}</td>
+      <td>¥${fmt(lCost)}</td>
       <td>${c.vat}%</td>
       <td>${referral*100}%</td>
+      <td class="dim">${c.sym}${fmt(adAmt)} (${ad}%)</td>
       <td class="dim">${c.sym}${fmt(fba)} <span class="size-tag">${tier}</span></td>
       <td class="price">${c.sym}${fmt(priceLoc)}</td>
-      <td class="cny">≈ ¥${fmt(priceRMB)}</td>
+      <td class="cny">¥${fmt(priceRMB)}</td>
       <td class="profit ${pRMB>=0?'green':'red'}">¥${fmt(pRMB)}</td>
-      <td class="profit ${pPct>=0?'green':'red'}">${fmt(pPct)}%</td>
+      <td class="profit ${pPct>=0?'green':'red'}">${fmt(pPct,1)}%</td>
     </tr>`;
   });
-  $('tbody').innerHTML=rows;
+  document.getElementById('tbody').innerHTML=rows;
 }
 
 calc();
