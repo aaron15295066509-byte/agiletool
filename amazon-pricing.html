@@ -55,7 +55,6 @@
   .profit{font-weight:600}
   .green{color:#4ade80}
   .red{color:#f87171}
-  .yellow{color:#facc15}
   .dim{color:#8899aa}
   .size-tag{
     display:inline-block;padding:1px 6px;border-radius:4px;
@@ -99,7 +98,7 @@
 <div class="wrap">
 
 <h1>🛒 亚马逊<span>欧洲站</span>定价计算器</h1>
-<div class="sub">簇绒地毯专用 · 一键查看10国售价与利润</div>
+<div class="sub">簇绒地毯专用 · 售价含VAT · 已修正VAT算法</div>
 
 <!-- Input -->
 <div class="card">
@@ -124,7 +123,7 @@
 
 <!-- Warning -->
 <div class="warn-box" id="warnBox">
-  <span class="t">⚠️ 体积重注意：</span> 地毯类商品亚马逊按<span style="color:#facc15;font-weight:600">体积重</span>计费（长×宽×卷厚÷5000）。当前体积重 <span id="vwDisplay" style="color:#facc15;font-weight:600">-</span> kg，是实重 <span id="awDisplay" style="color:#8899aa">-</span> kg 的 <span id="ratioDisplay" style="color:#facc15;font-weight:600">-</span> 倍，<span id="tierDesc">-</span>
+  <span class="t">⚠️ 体积重注意：</span> 当前体积重 <span id="vwDisplay" style="color:#facc15;font-weight:600">-</span>kg，是实重 <span id="awDisplay" style="color:#8899aa">-</span>kg 的 <span id="ratioDisplay" style="color:#facc15;font-weight:600">-</span>倍
 </div>
 
 <!-- Summary -->
@@ -132,7 +131,7 @@
 
 <!-- All Countries Table -->
 <div class="card" style="padding-bottom:4px;">
-  <div class="card-t">🌍 10国售价对比</div>
+  <div class="card-t">🌍 10国售价对比 <span style="color:#facc15;font-size:10px;font-weight:400;text-transform:none;">（VAT已修正 ÷1.19 算法）</span></div>
   <div class="mob-scroll">
   <table id="resultTable">
     <thead>
@@ -154,7 +153,7 @@
   </table>
   </div>
   <div class="good-note">
-    💡 体积重=长×宽×卷厚÷5000，FBA按体积重与实重较大值计费。价格均为含VAT售价。FBA费为估算值，以亚马逊官方实际扣费为准。
+    💡 体积重=长×宽×卷厚÷5000。VAT算法：售价÷(1+VAT%)得到不含税净收入。佣金按含税售价×15%。FBA为估算值，以亚马逊官方为准。
   </div>
 </div>
 
@@ -216,21 +215,17 @@ function calc(){
   const sCost=aW*sp;
   const lCost=pCost+sCost;
 
-  // Volume weight warning
   document.getElementById('vwDisplay').textContent=fmt(vW,2);
   document.getElementById('awDisplay').textContent=fmt(aW,2);
   const ratio=vW/aW;
   document.getElementById('ratioDisplay').textContent=fmt(ratio,1);
-  document.getElementById('tierDesc').textContent=ratio>5?'地板价都被体积重吃掉了⚠️':'FBA按体积重收费，注意控制包装尺寸';
 
-  // Summary
   document.getElementById('summaryBox').innerHTML=
     `<div class="stat"><div class="num">${fmt(area,3)}</div><div class="lbl">面积(m²)</div></div>
      <div class="stat"><div class="num">${fmt(aW,2)}</div><div class="lbl">实重(kg)</div></div>
      <div class="stat"><div class="num">${fmt(vW,2)}</div><div class="lbl">体积重(kg)</div></div>
      <div class="stat"><div class="num">¥${fmt(lCost,1)}</div><div class="lbl">到岸成本</div></div>`;
 
-  // Table
   const referral=0.15;
   const adPct=ad/100;
   let rows='';
@@ -240,17 +235,29 @@ function calc(){
     else if(bW<=c.fbaLm){fba=c.fbaL+c.fbaLk*bW;tier='L'}
     else{fba=c.fbaO+c.fbaOk*bW;tier='O'}
 
-    const vatP=c.vat/100;
+    const vatDec=c.vat/100;       // e.g. 0.19 for 19%
+    const vatMultiplier=1+vatDec; // e.g. 1.19
     const targetP=tp/100;
     const fbaCNY=fba*c.rate;
-    const denom=1-vatP-referral-adPct-targetP;
+    const lCostEUR=lCost/c.rate;
 
-    let priceLoc=0,priceRMB=0,pRMB=0,pPct=0,adAmt=0;
-    if(denom>0){
-      priceRMB=(fbaCNY+lCost)/denom;
-      priceLoc=priceRMB/c.rate;
+    // Correct formula:
+    // Net_revenue = Gross / (1+VAT)
+    // Profit = Gross/(1+VAT) - Gross*referral - FBA - Gross*ad - LandedCost
+    // Target: Profit = Gross * targetP
+    // Gross/(1+VAT) - Gross*referral - Gross*ad - Gross*targetP = FBA + LandedCost
+    // Gross * (1/(1+VAT) - referral - ad - targetP) = FBA + LandedCost
+
+    const coef=1/vatMultiplier - referral - adPct - targetP;
+
+    let priceLoc=0,priceRMB=0,pRMB=0,pPct=0,adAmt=0,vatAmt=0,refAmt=0;
+    if(coef>0){
+      priceLoc=(fba+lCostEUR)/coef;
+      priceRMB=priceLoc*c.rate;
+      vatAmt=priceLoc - priceLoc/vatMultiplier;
       adAmt=priceLoc*adPct;
-      pRMB=priceLoc*(1-vatP-referral-adPct)*c.rate-fbaCNY-lCost;
+      refAmt=priceLoc*referral;
+      pRMB=(priceLoc/vatMultiplier - refAmt - adAmt - fba)*c.rate - lCost;
       pPct=pRMB/(priceLoc*c.rate)*100;
     }
 
@@ -261,7 +268,7 @@ function calc(){
       <td>${c.vat}%</td>
       <td>${referral*100}%</td>
       <td class="dim">${c.sym}${fmt(adAmt)}</td>
-      <td class="dim">${tier==='O'?'<span style="color:#f87171">':''}${c.sym}${fmt(fba)}${tier==='O'?'</span>':''} <span class="size-tag">${tier}</span></td>
+      <td class="dim">${c.sym}${fmt(fba)} <span class="size-tag">${tier}</span></td>
       <td class="price">${c.sym}${fmt(priceLoc)}</td>
       <td class="cny">¥${fmt(priceRMB)}</td>
       <td class="profit ${pRMB>=0?'green':'red'}">¥${fmt(pRMB)}</td>
