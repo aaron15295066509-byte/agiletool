@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>亚马逊欧洲站定价计算器</title>
+<style>
+  :root {
+    --bg: #0f1923;
+    --card: #1a2833;
+    --card2: #1f3342;
+    --border: #2a4050;
+    --text: #e8edf0;
+    --dim: #8899aa;
+    --accent: #ff9900;
+    --accent2: #febd69;
+    --green: #4ade80;
+    --red: #f87171;
+    --blue: #60a5fa;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg); color: var(--text); padding: 20px;
+    min-height: 100vh;
+  }
+  .container { max-width: 820px; margin: 0 auto; }
+  h1 {
+    font-size: 22px; margin-bottom: 4px; display: flex; align-items: center; gap: 10px;
+  }
+  h1 span { color: var(--accent); }
+  .subtitle { color: var(--dim); font-size: 13px; margin-bottom: 24px; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px; margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 13px; font-weight: 600; color: var(--dim); text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 14px;
+  }
+
+  label { display: block; font-size: 13px; color: var(--dim); margin-bottom: 4px; }
+  .input-group { margin-bottom: 12px; }
+  input, select {
+    width: 100%; padding: 10px 12px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--card2);
+    color: var(--text); font-size: 15px; outline: none;
+    transition: border-color .2s;
+  }
+  input:focus, select:focus { border-color: var(--accent); }
+  input::placeholder { color: #556; }
+  .input-row { display: flex; gap: 10px; }
+  .input-row .input-group { flex: 1; }
+  .unit { color: var(--dim); font-size: 12px; margin-top: 2px; }
+
+  .country-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px;
+  }
+  @media (max-width: 480px) { .country-grid { grid-template-columns: repeat(2, 1fr); } }
+  .country-btn {
+    padding: 8px 6px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--card2); color: var(--dim); font-size: 13px;
+    cursor: pointer; text-align: center; transition: all .2s;
+  }
+  .country-btn:hover { border-color: var(--accent); color: var(--text); }
+  .country-btn.active {
+    background: var(--accent); color: #000; border-color: var(--accent);
+    font-weight: 600;
+  }
+
+  .result-section { display: none; margin-top: 6px; }
+  .result-section.show { display: block; }
+
+  .cost-row {
+    display: flex; justify-content: space-between;
+    padding: 8px 0; font-size: 14px; border-bottom: 1px solid var(--border);
+  }
+  .cost-row:last-child { border-bottom: none; }
+  .cost-row .label { color: var(--dim); }
+  .cost-row .value { font-weight: 600; }
+  .cost-row.total { border-top: 2px solid var(--accent); margin-top: 4px; padding-top: 10px; }
+  .cost-row.total .value { color: var(--accent); font-size: 16px; }
+
+  .price-block {
+    background: var(--card2); border-radius: 10px; padding: 16px; margin-top: 14px;
+  }
+  .price-block-title { font-size: 13px; color: var(--dim); margin-bottom: 10px; }
+
+  .profit-calc { margin-top: 12px; }
+  .profit-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 0; font-size: 14px;
+  }
+  .profit-row .label { color: var(--dim); }
+  .profit-row .value { font-weight: 600; }
+  .profit-row .green { color: var(--green); }
+  .profit-row .red { color: var(--red); }
+  .profit-row .blue { color: var(--blue); }
+
+  .mode-toggle {
+    display: flex; gap: 8px; margin-bottom: 14px;
+  }
+  .mode-btn {
+    flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--card2); color: var(--dim); font-size: 13px;
+    cursor: pointer; text-align: center; transition: all .2s;
+  }
+  .mode-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .mode-btn:hover:not(.active) { border-color: var(--blue); color: var(--text); }
+
+  .hidden { display: none; }
+
+  .pricing-detail { font-size: 13px; }
+  .pricing-detail .row {
+    display: flex; justify-content: space-between; padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .pricing-detail .row:last-child { border-bottom: none; }
+  .pricing-detail .l { color: var(--dim); }
+  .pricing-detail .v { font-weight: 600; }
+
+  .note {
+    background: rgba(255,153,0,0.08); border: 1px solid var(--accent);
+    border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--dim);
+    margin-top: 14px; line-height: 1.6;
+  }
+  .note strong { color: var(--accent); }
+
+  /* Responsive table note */
+  .fees-note {
+    font-size: 11px; color: #667; margin-top: 6px; line-height: 1.5;
+  }
+
+  .landed-cost-box {
+    background: linear-gradient(135deg, rgba(255,153,0,0.1), rgba(255,153,0,0.03));
+    border: 1px solid var(--accent); border-radius: 10px; padding: 14px; margin-bottom: 14px;
+    text-align: center;
+  }
+  .landed-cost-box .big {
+    font-size: 28px; font-weight: 700; color: var(--accent);
+  }
+  .landed-cost-box .sub {
+    font-size: 12px; color: var(--dim); margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>🛒 亚马逊<span>欧洲站</span>定价计算器</h1>
+<div class="subtitle">基于成本倒推，多国一键对比 · 簇绒地毯专用</div>
+
+<!-- Product Input -->
+<div class="card">
+  <div class="card-title">📐 产品信息</div>
+  <div class="grid">
+    <div class="input-row">
+      <div class="input-group">
+        <label>宽度 (cm)</label>
+        <input type="number" id="width" value="120" min="1" step="1" oninput="calc()">
+      </div>
+      <div class="input-group">
+        <label>高度 (cm)</label>
+        <input type="number" id="height" value="160" min="1" step="1" oninput="calc()">
+      </div>
+    </div>
+    <div class="input-group">
+      <label>克重 (g/m²)</label>
+      <input type="number" id="gsm" value="800" min="1" step="10" oninput="calc()">
+    </div>
+  </div>
+  <div class="grid">
+    <div class="input-group">
+      <label>采购单价 (元/m²)</label>
+      <input type="number" id="unitPrice" value="60" min="0" step="0.5" oninput="calc()">
+    </div>
+    <div class="input-group">
+      <label>头程运费 (元/kg)</label>
+      <input type="number" id="shipping" value="20" min="0" step="0.5" oninput="calc()">
+    </div>
+  </div>
+</div>
+
+<!-- Country Selection -->
+<div class="card">
+  <div class="card-title">🌍 选择目标国家</div>
+  <div class="country-grid" id="countryGrid">
+    <div class="country-btn" data-country="uk" onclick="selectCountry('uk')">🇬🇧 英国</div>
+    <div class="country-btn active" data-country="de" onclick="selectCountry('de')">🇩🇪 德国</div>
+    <div class="country-btn" data-country="fr" onclick="selectCountry('fr')">🇫🇷 法国</div>
+    <div class="country-btn" data-country="it" onclick="selectCountry('it')">🇮🇹 意大利</div>
+    <div class="country-btn" data-country="es" onclick="selectCountry('es')">🇪🇸 西班牙</div>
+    <div class="country-btn" data-country="nl" onclick="selectCountry('nl')">🇳🇱 荷兰</div>
+    <div class="country-btn" data-country="se" onclick="selectCountry('se')">🇸🇪 瑞典</div>
+    <div class="country-btn" data-country="pl" onclick="selectCountry('pl')">🇵🇱 波兰</div>
+  </div>
+</div>
+
+<!-- Calculation Mode -->
+<div class="card">
+  <div class="card-title">📊 计算模式</div>
+  <div class="mode-toggle">
+    <div class="mode-btn active" data-mode="profit" onclick="setMode('profit')">🎯 目标利润率 → 算出售价</div>
+    <div class="mode-btn" data-mode="price" onclick="setMode('price')">💰 输入售价 → 算出利润</div>
+  </div>
+
+  <!-- Mode: target profit -->
+  <div id="modeProfit" class="input-group">
+    <label>期望净利润率 (%)</label>
+    <input type="number" id="targetProfit" value="20" min="0" max="100" step="1" oninput="calc()">
+  </div>
+
+  <!-- Mode: input price -->
+  <div id="modePrice" class="input-group hidden">
+    <label>输入售价（当地货币）</label>
+    <input type="number" id="inputPrice" value="" min="0" step="0.01" placeholder="如 39.99" oninput="calc()">
+  </div>
+</div>
+
+<!-- Results -->
+<div class="card" id="resultCard">
+  <div class="card-title">📋 计算结果</div>
+
+  <div class="landed-cost-box" id="landedCostBox">
+    <div class="sub">到岸总成本（采购+头程）</div>
+    <div class="big" id="landedCostDisplay">¥0.00</div>
+  </div>
+
+  <div class="result-section show" id="resultSection">
+
+    <!-- Cost breakdown -->
+    <div class="price-block">
+      <div class="price-block-title">📦 成本明细</div>
+      <div class="cost-row"><span class="label">产品尺寸</span><span class="value" id="displaySize">-</span></div>
+      <div class="cost-row"><span class="label">面积</span><span class="value" id="displayArea">-</span></div>
+      <div class="cost-row"><span class="label">单品重量</span><span class="value" id="displayWeight">-</span></div>
+      <div class="cost-row"><span class="label">采购成本</span><span class="value" id="displayPurchase">-</span></div>
+      <div class="cost-row"><span class="label">头程运费</span><span class="value" id="displayShipping">-</span></div>
+      <div class="cost-row total"><span class="label">到岸成本</span><span class="value" id="displayLanded">-</span></div>
+    </div>
+
+    <!-- Pricing -->
+    <div class="price-block" style="margin-top:12px;">
+      <div class="price-block-title">💶 售价与利润（<span id="countryNameDisplay">德国</span>）</div>
+      <div class="pricing-detail" id="pricingDetail"></div>
+    </div>
+
+  </div>
+
+  <div class="note" id="notesSection">
+    💡 <strong>体积重提醒：</strong> 地毯类商品通常按体积重计费（长×宽×高÷5000）。当体积重大于实际重时，亚马逊按体积重收取FBA费用。
+  </div>
+</div>
+
+</div>
+
+<script>
+const COUNTRY_DATA = {
+  uk: {
+    name: '英国', flag: '🇬🇧', currency: 'GBP', symbol: '£',
+    vat: 20, fxRate: 9.10, referralPct: 0.15,
+    fbaBase: 4.50, fbaPerKg: 0.85,
+    fbaLargeBase: 6.20, fbaLargePerKg: 1.10,
+    fbaOversizeBase: 12.00, fbaOversizePerKg: 0.75,
+    sizeThreshold: 1.2, largeThreshold: 3.0
+  },
+  de: {
+    name: '德国', flag: '🇩🇪', currency: 'EUR', symbol: '€',
+    vat: 19, fxRate: 7.80, referralPct: 0.15,
+    fbaBase: 4.20, fbaPerKg: 0.80,
+    fbaLargeBase: 5.80, fbaLargePerKg: 1.05,
+    fbaOversizeBase: 11.00, fbaOversizePerKg: 0.70,
+    sizeThreshold: 1.2, largeThreshold: 3.0
+  },
+  fr: {
+    name: '法国', flag: '🇫🇷', currency: 'EUR', symbol: '€',
+    vat: 20, fxRate: 7.80, referralPct: 0.15,
+    fbaBase: 4.30, fbaPerKg: 0.82,
+    fbaLargeBase: 5.90, fbaLargePerKg: 1.08,
+    fbaOversizeBase: 11.50, fbaOversizePerKg: 0.72,
+    sizeThreshold: 1.2, largeThreshold: 3.0
+  },
+  it: {
+    name: '意大利', flag: '🇮🇹', currency: 'EUR', symbol: '€',
+    vat: 22, fxRate: 7.80, referralPct: 0.15,
+    fbaBase: 4.25, fbaPerKg: 0.80,
+    fbaLargeBase: 5.85, fbaLargePerKg: 1.05,
+    fbaOversizeBase: 11.30, fbaOversizePerKg: 0.70,
+    sizeThreshold: 1.2, largeThreshold: 3.0
+  },
+  es: {
+    name: '西班牙', flag: '🇪🇸', currency: 'EUR', symbol: '€',
+    vat: 21, fxRate: 7.80, referralPct: 0.15,
+    fbaBase: 4.15, fbaPerKg: 0.78,
+    fbaLargeBase: 5.70, fbaLargePerKg: 1.02,
+    fbaOversizeBase: 11.00, fbaOversizePerKg: 0.68,
+    sizeThreshold: 1.2, largeThreshold: 3.0
+  },
+  nl: {
+    name: '荷兰', flag: '🇳🇱', currency: 'EUR', symbol: '€',
+    vat: 21, fxRate: 7.80, referralPct: 0.15,
+    fbaBase: 4.40, fbaPerKg: 0.85,
+    fbaLargeBase: 6.00, fbaLargePerKg: 1.10,
+    fbaOversizeBase: 12.00, fbaOversizePerKg: 0.75,
+    sizeThreshold: 1.2, largeThreshold: 3.0
+  },
+  se: {
+    name: '瑞典', flag: '🇸🇪', currency: 'SEK', symbol: 'kr',
+    vat: 25, fxRate: 0.72, referralPct: 0.15,
+    fbaBase: 45, fbaPerKg: 8,
+    fbaLargeBase: 60, fbaLargePerKg: 10,
+    fbaOversizeBase: 110, fbaOversizePerKg: 7,
+    sizeThreshold: 1.2, largeThreshold: 3.0
+  },
+  pl: {
+    name: '波兰', flag: '🇵🇱', currency: 'PLN', symbol: 'zł',
+    vat: 23, fxRate: 1.70, referralPct: 0.15,
+    fbaBase: 18, fbaPerKg: 3.5,
+    fbaLargeBase: 25, fbaLargePerKg: 4.5,
+    fbaOversizeBase: 45, fbaOversizePerKg: 3,
+    sizeThreshold: 1.2, largeThreshold: 3.0
+  }
+};
+
+let currentCountry = 'de';
+let currentMode = 'profit';
+
+function selectCountry(code) {
+  currentCountry = code;
+  document.querySelectorAll('.country-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.country-btn[data-country="${code}"]`).classList.add('active');
+  calc();
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.mode-btn[data-mode="${mode}"]`).classList.add('active');
+  document.getElementById('modeProfit').classList.toggle('hidden', mode !== 'profit');
+  document.getElementById('modePrice').classList.toggle('hidden', mode !== 'price');
+  calc();
+}
+
+function fmt(n, decimals = 2) {
+  return Number(n).toFixed(decimals);
+}
+
+function calc() {
+  const w = parseFloat(document.getElementById('width').value) || 0;
+  const h = parseFloat(document.getElementById('height').value) || 0;
+  const gsm = parseFloat(document.getElementById('gsm').value) || 0;
+  const unitPrice = parseFloat(document.getElementById('unitPrice').value) || 0;
+  const shipping = parseFloat(document.getElementById('shipping').value) || 0;
+  const targetProfit = parseFloat(document.getElementById('targetProfit').value) || 0;
+  const inputPrice = parseFloat(document.getElementById('inputPrice').value) || 0;
+
+  if (!w || !h || !gsm) return;
+
+  const country = COUNTRY_DATA[currentCountry];
+
+  // Product calculations
+  const area = (w * h) / 10000;          // m²
+  const weight = area * gsm / 1000;       // kg (actual)
+  const volWeight = (w * h * 2.5) / 5000; // volumetric (assume height ~2.5cm for rolled rug)
+  const billableWeight = Math.max(weight, volWeight);
+
+  const purchaseCost = area * unitPrice;
+  const shippingCost = weight * shipping;  // actual weight for shipping
+  const landedCost = purchaseCost + shippingCost;
+
+  // Display basic info
+  document.getElementById('displaySize').textContent = `${w} × ${h}cm`;
+  document.getElementById('displayArea').textContent = `${fmt(area)} m²`;
+  document.getElementById('displayWeight').textContent = `${fmt(weight)} kg (体积重: ${fmt(volWeight)} kg)`;
+  document.getElementById('displayPurchase').textContent = `¥${fmt(purchaseCost)}`;
+  document.getElementById('displayShipping').textContent = `¥${fmt(shippingCost)}`;
+  document.getElementById('displayLanded').textContent = `¥${fmt(landedCost)}`;
+  document.getElementById('landedCostDisplay').textContent = `¥${fmt(landedCost)}`;
+
+  document.getElementById('countryNameDisplay').textContent = country.name;
+
+  // Determine FBA size tier
+  let fbaFee;
+  let sizeTier;
+  if (billableWeight <= country.sizeThreshold) {
+    fbaFee = country.fbaBase + country.fbaPerKg * billableWeight;
+    sizeTier = '标准件';
+  } else if (billableWeight <= country.largeThreshold) {
+    fbaFee = country.fbaLargeBase + country.fbaLargePerKg * billableWeight;
+    sizeTier = '大件';
+  } else {
+    fbaFee = country.fbaOversizeBase + country.fbaOversizePerKg * billableWeight;
+    sizeTier = '超大件';
+  }
+
+  // Compute pricing
+  if (currentMode === 'profit') {
+    // Target profit margin → calculate selling price
+    // landedCostRMB + feeCNY / (1 - vat - referral - profitMargin)
+    // Actually: Price * (1 - vatPct - referralPct) - fbaFeeLocal * fxRate = landedCost + profit
+    // Profit = Price * (1 - vatPct - referralPct) - fbaFeeCNY - landedCost
+    // targetProfit = Profit / Price
+    // For simplicity, solve for Price where Profit = Price * targetProfit
+    // Profit = Price * (1 - vatPct - referralPct) - fbaFeeCNY - landedCost
+    // Price * targetProfit = Price * (1 - vatPct - referralPct) - fbaFeeCNY - landedCost
+    // Price * (1 - vatPct - referralPct - targetProfit) = fbaFeeCNY + landedCost
+    // Price = (fbaFeeCNY + landedCost) / (1 - vatPct - referralPct - targetProfit/100)
+
+    const vatPct = country.vat / 100;
+    const targetPct = targetProfit / 100;
+    const fbaFeeCNY = fbaFee * country.fxRate;
+
+    const denominator = 1 - vatPct - country.referralPct - targetPct;
+    if (denominator <= 0) {
+      document.getElementById('pricingDetail').innerHTML = `<div style="color:var(--red);font-size:13px;">⚠️ 目标利润过高，无法计算出合理售价（费率总和超过100%）</div>`;
+      return;
+    }
+
+    const priceRMB = (fbaFeeCNY + landedCost) / denominator;
+    const priceLocal = priceRMB / country.fxRate;
+
+    // Breakdown
+    const vatAmount = priceLocal * vatPct;
+    const referralAmount = priceLocal * country.referralPct;
+    const fbaLocal = fbaFee;
+    const totalFeesLocal = vatAmount + referralAmount + fbaLocal;
+    const revenueAfterVat = priceLocal - vatAmount;
+    const revenueAfterFeesLocal = revenueAfterVat - referralAmount - fbaLocal;
+    // Correction: FBA fee is charged by Amazon, and VAT is collected separately
+    
+    const profitRMB = priceLocal * (1 - vatPct - country.referralPct) * country.fxRate - fbaFeeCNY - landedCost;
+    const profitMargin = profitRMB / (priceLocal * country.fxRate) * 100;
+
+    document.getElementById('pricingDetail').innerHTML = `
+      <div class="row"><span class="l">📤 产品尺寸分级</span><span class="v">${sizeTier}</span></div>
+      <div class="row"><span class="l">💵 建议售价（含VAT）</span><span class="v" style="font-size:18px;color:var(--accent);">${country.symbol}${fmt(priceLocal)}</span></div>
+      <div class="row"><span class="l">  折合人民币</span><span class="v">≈ ¥${fmt(priceRMB)}</span></div>
+      <div class="row"><span class="l">🏛️ VAT (${country.vat}%)</span><span class="v">-${country.symbol}${fmt(vatAmount)}</span></div>
+      <div class="row"><span class="l">📢 平台佣金 (${country.referralPct*100}%)</span><span class="v">-${country.symbol}${fmt(referralAmount)}</span></div>
+      <div class="row"><span class="l">📦 FBA配送费</span><span class="v">-${country.symbol}${fmt(fbaLocal)}</span></div>
+      <div class="row" style="border-bottom:2px solid var(--accent);padding-bottom:8px;margin-bottom:4px;">
+        <span class="l">💸 费用合计</span>
+        <span class="v" style="color:var(--red);">-${country.symbol}${fmt(totalFeesLocal)}</span>
+      </div>
+      <div class="row"><span class="l">到手收入（税后）</span><span class="v" style="color:var(--blue);">${country.symbol}${fmt(revenueAfterVat - referralAmount - fbaLocal)}</span></div>
+      <div class="row"><span class="l">💰 净利润</span><span class="v" style="color:${profitMargin >= 0 ? 'var(--green)' : 'var(--red)'};font-weight:700;">¥${fmt(profitRMB)}</span></div>
+      <div class="row"><span class="l">📊 净利润率</span><span class="v" style="color:${profitMargin >= 0 ? 'var(--green)' : 'var(--red)'};font-weight:700;">${fmt(profitMargin)}%</span></div>
+    `;
+  } else {
+    // User entered a price → calculate profit
+    const priceLocal = inputPrice;
+    if (!priceLocal || priceLocal <= 0) {
+      document.getElementById('pricingDetail').innerHTML = `<div style="color:var(--dim);font-size:13px;">请输入售价后查看利润分析</div>`;
+      return;
+    }
+
+    const vatPct = country.vat / 100;
+    const vatAmount = priceLocal * vatPct;
+    const referralAmount = priceLocal * country.referralPct;
+    const fbaLocal = fbaFee;
+    const priceRMB = priceLocal * country.fxRate;
+    const fbaFeeCNY = fbaFee * country.fxRate;
+
+    const profitRMB = priceLocal * (1 - vatPct - country.referralPct) * country.fxRate - fbaFeeCNY - landedCost;
+    const profitMargin = profitRMB / priceRMB * 100;
+
+    document.getElementById('pricingDetail').innerHTML = `
+      <div class="row"><span class="l">📤 产品尺寸分级</span><span class="v">${sizeTier}</span></div>
+      <div class="row"><span class="l">💵 售价（含VAT）</span><span class="v" style="color:var(--accent);">${country.symbol}${fmt(priceLocal)}</span></div>
+      <div class="row"><span class="l">  折合人民币</span><span class="v">≈ ¥${fmt(priceRMB)}</span></div>
+      <div class="row"><span class="l">🏛️ VAT (${country.vat}%)</span><span class="v">-${country.symbol}${fmt(vatAmount)}</span></div>
+      <div class="row"><span class="l">📢 平台佣金 (${country.referralPct*100}%)</span><span class="v">-${country.symbol}${fmt(referralAmount)}</span></div>
+      <div class="row"><span class="l">📦 FBA配送费</span><span class="v">-${country.symbol}${fmt(fbaLocal)}</span></div>
+      <div class="row" style="border-bottom:2px solid var(--accent);padding-bottom:8px;margin-bottom:4px;">
+        <span class="l">💸 费用合计</span>
+        <span class="v" style="color:var(--red);">-${country.symbol}${fmt(vatAmount + referralAmount + fbaLocal)}</span>
+      </div>
+      <div class="row"><span class="l">💰 净利润</span><span class="v" style="color:${profitMargin >= 0 ? 'var(--green)' : 'var(--red)'};font-weight:700;">¥${fmt(profitRMB)}</span></div>
+      <div class="row"><span class="l">📊 净利润率</span><span class="v" style="color:${profitMargin >= 0 ? 'var(--green)' : 'var(--red)'};font-weight:700;">${fmt(profitMargin)}%</span></div>
+    `;
+  }
+}
+
+// Initialize
+calc();
+</script>
+</body>
+</html>
