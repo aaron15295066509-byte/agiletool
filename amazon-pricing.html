@@ -56,16 +56,6 @@
   .green{color:#4ade80}
   .red{color:#f87171}
   .dim{color:#8899aa}
-  .size-tag{
-    display:inline-block;padding:1px 6px;border-radius:4px;
-    font-size:10px;background:#1f3342;color:#8899aa
-  }
-
-  .note{
-    background:rgba(255,153,0,.06);border:1px solid #f90;
-    border-radius:6px;padding:8px 12px;font-size:11px;
-    color:#8899aa;margin-top:12px;line-height:1.5
-  }
 
   .summary-card{
     display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));
@@ -79,28 +69,14 @@
 
   .mob-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
   .good-note{margin-top:4px;font-size:11px;color:#667;line-height:1.4}
-  .warn-box{
-    background:rgba(250,204,21,.08);border:1px solid #facc15;
-    border-radius:8px;padding:10px 12px;font-size:12px;
-    color:#e8edf0;margin-bottom:12px;line-height:1.6
-  }
-  .warn-box .t{color:#facc15;font-weight:600}
-
-  @media(max-width:480px){
-    body{padding:10px}
-    .card{padding:10px}
-    table{font-size:12px}
-    table td,table th{padding:4px 3px}
-  }
 </style>
 </head>
 <body>
 <div class="wrap">
 
 <h1>🛒 亚马逊<span>欧洲站</span>定价计算器</h1>
-<div class="sub">簇绒地毯专用 · 售价含VAT · 已修正VAT算法</div>
+<div class="sub">簇绒地毯专用 · FBA统一€8.50</div>
 
-<!-- Input -->
 <div class="card">
   <div class="card-t">📐 产品信息</div>
   <div class="grid2">
@@ -117,23 +93,16 @@
   </div>
   <div class="grid2" style="margin-top:2px">
     <div class="ig"><label>目标净利率 (%)</label><input type="number" id="profit" value="30" oninput="calc()"></div>
-    <div class="ig"><label>卷起厚度 (cm)</label><input type="number" id="thick" value="10" oninput="calc()"></div>
+    <div class="ig"><label>FBA费 (€固定值)</label><input type="number" id="fba" value="8.5" oninput="calc()"></div>
   </div>
 </div>
 
-<!-- Warning -->
-<div class="warn-box" id="warnBox">
-  <span class="t">⚠️ 体积重注意：</span> 当前体积重 <span id="vwDisplay" style="color:#facc15;font-weight:600">-</span>kg，是实重 <span id="awDisplay" style="color:#8899aa">-</span>kg 的 <span id="ratioDisplay" style="color:#facc15;font-weight:600">-</span>倍
-</div>
-
-<!-- Summary -->
 <div class="summary-card" id="summaryBox"></div>
 
-<!-- All Countries Table -->
 <div class="card" style="padding-bottom:4px;">
-  <div class="card-t">🌍 10国售价对比 <span style="color:#facc15;font-size:10px;font-weight:400;text-transform:none;">（VAT已修正 ÷1.19 算法）</span></div>
+  <div class="card-t">🌍 10国售价对比 <span style="color:#facc15;font-size:10px;font-weight:400;text-transform:none;">（FBA统一€8.50）</span></div>
   <div class="mob-scroll">
-  <table id="resultTable">
+  <table>
     <thead>
       <tr>
         <th>国家</th>
@@ -152,45 +121,23 @@
     <tbody id="tbody"></tbody>
   </table>
   </div>
-  <div class="good-note">
-    💡 体积重=长×宽×卷厚÷5000。VAT算法：售价÷(1+VAT%)得到不含税净收入。佣金按含税售价×15%。FBA为估算值，以亚马逊官方为准。
-  </div>
+  <div class="good-note">💡 VAT算法：售价÷(1+VAT%)得不含税收入。佣金按含税售价×15%。非欧元国FBA费按汇率折算。</div>
 </div>
 
 </div>
 
 <script>
 const COUNTRIES = [
-  {id:'de',name:'德国',flag:'🇩🇪',cur:'EUR',sym:'€',vat:19,rate:7.80,
-   fbaS:4.20,fbaSk:0.80,fbaSm:3,fbaL:5.80,fbaLk:1.05,fbaLm:8,
-   fbaO:11.00,fbaOk:0.70,fbaOm:15},
-  {id:'uk',name:'英国',flag:'🇬🇧',cur:'GBP',sym:'£',vat:20,rate:9.10,
-   fbaS:4.50,fbaSk:0.85,fbaSm:3,fbaL:6.20,fbaLk:1.10,fbaLm:8,
-   fbaO:12.00,fbaOk:0.75,fbaOm:15},
-  {id:'fr',name:'法国',flag:'🇫🇷',cur:'EUR',sym:'€',vat:20,rate:7.80,
-   fbaS:4.30,fbaSk:0.82,fbaSm:3,fbaL:5.90,fbaLk:1.08,fbaLm:8,
-   fbaO:11.50,fbaOk:0.72,fbaOm:15},
-  {id:'it',name:'意大利',flag:'🇮🇹',cur:'EUR',sym:'€',vat:22,rate:7.80,
-   fbaS:4.25,fbaSk:0.80,fbaSm:3,fbaL:5.85,fbaLk:1.05,fbaLm:8,
-   fbaO:11.30,fbaOk:0.70,fbaOm:15},
-  {id:'es',name:'西班牙',flag:'🇪🇸',cur:'EUR',sym:'€',vat:21,rate:7.80,
-   fbaS:4.15,fbaSk:0.78,fbaSm:3,fbaL:5.70,fbaLk:1.02,fbaLm:8,
-   fbaO:11.00,fbaOk:0.68,fbaOm:15},
-  {id:'nl',name:'荷兰',flag:'🇳🇱',cur:'EUR',sym:'€',vat:21,rate:7.80,
-   fbaS:4.40,fbaSk:0.85,fbaSm:3,fbaL:6.00,fbaLk:1.10,fbaLm:8,
-   fbaO:12.00,fbaOk:0.75,fbaOm:15},
-  {id:'be',name:'比利时',flag:'🇧🇪',cur:'EUR',sym:'€',vat:21,rate:7.80,
-   fbaS:4.25,fbaSk:0.82,fbaSm:3,fbaL:5.85,fbaLk:1.07,fbaLm:8,
-   fbaO:11.50,fbaOk:0.72,fbaOm:15},
-  {id:'se',name:'瑞典',flag:'🇸🇪',cur:'SEK',sym:'kr',vat:25,rate:0.72,
-   fbaS:45,fbaSk:8,fbaSm:3,fbaL:60,fbaLk:10,fbaLm:8,
-   fbaO:110,fbaOk:7,fbaOm:15},
-  {id:'pl',name:'波兰',flag:'🇵🇱',cur:'PLN',sym:'zł',vat:23,rate:1.70,
-   fbaS:18,fbaSk:3.5,fbaSm:3,fbaL:25,fbaLk:4.5,fbaLm:8,
-   fbaO:45,fbaOk:3,fbaOm:15},
-  {id:'ie',name:'爱尔兰',flag:'🇮🇪',cur:'EUR',sym:'€',vat:23,rate:7.80,
-   fbaS:4.50,fbaSk:0.88,fbaSm:3,fbaL:6.30,fbaLk:1.15,fbaLm:8,
-   fbaO:12.50,fbaOk:0.78,fbaOm:15}
+  {id:'de',name:'德国',flag:'🇩🇪',cur:'EUR',sym:'€',vat:19,rate:7.80},
+  {id:'uk',name:'英国',flag:'🇬🇧',cur:'GBP',sym:'£',vat:20,rate:9.10},
+  {id:'fr',name:'法国',flag:'🇫🇷',cur:'EUR',sym:'€',vat:20,rate:7.80},
+  {id:'it',name:'意大利',flag:'🇮🇹',cur:'EUR',sym:'€',vat:22,rate:7.80},
+  {id:'es',name:'西班牙',flag:'🇪🇸',cur:'EUR',sym:'€',vat:21,rate:7.80},
+  {id:'nl',name:'荷兰',flag:'🇳🇱',cur:'EUR',sym:'€',vat:21,rate:7.80},
+  {id:'be',name:'比利时',flag:'🇧🇪',cur:'EUR',sym:'€',vat:21,rate:7.80},
+  {id:'se',name:'瑞典',flag:'🇸🇪',cur:'SEK',sym:'kr',vat:25,rate:0.72},
+  {id:'pl',name:'波兰',flag:'🇵🇱',cur:'PLN',sym:'zł',vat:23,rate:1.70},
+  {id:'ie',name:'爱尔兰',flag:'🇮🇪',cur:'EUR',sym:'€',vat:23,rate:7.80}
 ];
 
 function fmt(n,d){d=d||2;return Number(n).toFixed(d)}
@@ -203,61 +150,38 @@ function calc(){
   const sp=parseFloat(document.getElementById('ship').value)||0;
   const ad=parseFloat(document.getElementById('ad').value)||0;
   const tp=parseFloat(document.getElementById('profit').value)||0;
-  const tk=parseFloat(document.getElementById('thick').value)||2.5;
+  const fbaEUR=parseFloat(document.getElementById('fba').value)||0;
 
   if(!w||!h||!g)return;
 
   const area=w*h/10000;
   const aW=area*g/1000;
-  const vW=w*h*tk/5000;
-  const bW=Math.max(aW,vW);
   const pCost=area*cp;
   const sCost=aW*sp;
   const lCost=pCost+sCost;
 
-  document.getElementById('vwDisplay').textContent=fmt(vW,2);
-  document.getElementById('awDisplay').textContent=fmt(aW,2);
-  const ratio=vW/aW;
-  document.getElementById('ratioDisplay').textContent=fmt(ratio,1);
-
   document.getElementById('summaryBox').innerHTML=
     `<div class="stat"><div class="num">${fmt(area,3)}</div><div class="lbl">面积(m²)</div></div>
      <div class="stat"><div class="num">${fmt(aW,2)}</div><div class="lbl">实重(kg)</div></div>
-     <div class="stat"><div class="num">${fmt(vW,2)}</div><div class="lbl">体积重(kg)</div></div>
+     <div class="stat"><div class="num">¥${fmt(pCost,1)}</div><div class="lbl">采购成本</div></div>
      <div class="stat"><div class="num">¥${fmt(lCost,1)}</div><div class="lbl">到岸成本</div></div>`;
 
   const referral=0.15;
   const adPct=ad/100;
   let rows='';
   COUNTRIES.forEach((c,i)=>{
-    let fba,tier;
-    if(bW<=c.fbaSm){fba=c.fbaS+c.fbaSk*bW;tier='S'}
-    else if(bW<=c.fbaLm){fba=c.fbaL+c.fbaLk*bW;tier='L'}
-    else{fba=c.fbaO+c.fbaOk*bW;tier='O'}
-
-    const vatDec=c.vat/100;       // e.g. 0.19 for 19%
-    const vatMultiplier=1+vatDec; // e.g. 1.19
+    const fbaLocal=fbaEUR*7.80/c.rate; // convert 8.50 EUR to local currency
+    const vatM=1+c.vat/100;
     const targetP=tp/100;
-    const fbaCNY=fba*c.rate;
     const lCostEUR=lCost/c.rate;
+    const coef=1/vatM - referral - adPct - targetP;
 
-    // Correct formula:
-    // Net_revenue = Gross / (1+VAT)
-    // Profit = Gross/(1+VAT) - Gross*referral - FBA - Gross*ad - LandedCost
-    // Target: Profit = Gross * targetP
-    // Gross/(1+VAT) - Gross*referral - Gross*ad - Gross*targetP = FBA + LandedCost
-    // Gross * (1/(1+VAT) - referral - ad - targetP) = FBA + LandedCost
-
-    const coef=1/vatMultiplier - referral - adPct - targetP;
-
-    let priceLoc=0,priceRMB=0,pRMB=0,pPct=0,adAmt=0,vatAmt=0,refAmt=0;
+    let priceLoc=0,priceRMB=0,pRMB=0,pPct=0,adAmt=0;
     if(coef>0){
-      priceLoc=(fba+lCostEUR)/coef;
+      priceLoc=(fbaLocal+lCostEUR)/coef;
       priceRMB=priceLoc*c.rate;
-      vatAmt=priceLoc - priceLoc/vatMultiplier;
       adAmt=priceLoc*adPct;
-      refAmt=priceLoc*referral;
-      pRMB=(priceLoc/vatMultiplier - refAmt - adAmt - fba)*c.rate - lCost;
+      pRMB=(priceLoc/vatM - priceLoc*referral - adAmt - fbaLocal)*c.rate - lCost;
       pPct=pRMB/(priceLoc*c.rate)*100;
     }
 
@@ -268,7 +192,7 @@ function calc(){
       <td>${c.vat}%</td>
       <td>${referral*100}%</td>
       <td class="dim">${c.sym}${fmt(adAmt)}</td>
-      <td class="dim">${c.sym}${fmt(fba)} <span class="size-tag">${tier}</span></td>
+      <td class="dim">${c.sym}${fmt(fbaLocal)}</td>
       <td class="price">${c.sym}${fmt(priceLoc)}</td>
       <td class="cny">¥${fmt(priceRMB)}</td>
       <td class="profit ${pRMB>=0?'green':'red'}">¥${fmt(pRMB)}</td>
