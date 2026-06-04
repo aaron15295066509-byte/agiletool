@@ -10,7 +10,7 @@
     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     background:#0f1923;color:#e8edf0;padding:16px;min-height:100vh
   }
-  .wrap{max-width:960px;margin:0 auto}
+  .wrap{max-width:1000px;margin:0 auto}
   h1{font-size:20px;margin-bottom:2px}
   h1 span{color:#f90}
   .sub{color:#8899aa;font-size:12px;margin-bottom:20px}
@@ -39,15 +39,30 @@
   .ir{display:flex;gap:8px}
   .ir .ig{flex:1}
 
-  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
   thead th{
     text-align:left;padding:8px 6px;border-bottom:2px solid #f90;
     color:#8899aa;font-size:11px;text-transform:uppercase;letter-spacing:.5px;
-    font-weight:600;white-space:nowrap;position:sticky;top:0;background:#1a2833;z-index:1
+    font-weight:600;white-space:nowrap;position:sticky;top:0;background:#1a2833;z-index:1;cursor:pointer
   }
   tbody td{padding:7px 6px;border-bottom:1px solid #1f3342}
-  tbody tr:hover{background:rgba(255,153,0,.04)}
+  tbody tr.row-main{cursor:pointer}
+  tbody tr.row-main:hover{background:rgba(255,153,0,.04)}
   .tr-alt{background:rgba(255,255,255,.015)}
+  .row-detail{display:none}
+  .row-detail.show{display:table-row}
+  .row-detail td{padding:0}
+  .detail-box{
+    background:#0d151c;border:1px solid #2a4050;border-radius:8px;
+    margin:4px 8px 8px 8px;padding:12px 14px;font-size:12px;line-height:1.7
+  }
+  .detail-box .line{display:flex;justify-content:space-between;padding:2px 0}
+  .detail-box .l{color:#8899aa}
+  .detail-box .r{font-weight:600;text-align:right}
+  .detail-box .sub{color:#667;font-size:11px;padding-left:12px}
+  .detail-box .total{border-top:1px solid #2a4050;margin-top:4px;padding-top:6px}
+  .detail-box .total .r{color:#f90;font-size:14px}
+  .detail-box .fn{color:#60a5fa;font-size:11px;font-family:monospace}
 
   .flag{font-size:16px;margin-right:3px}
   .price{font-weight:700;color:#f90;font-size:14px}
@@ -69,13 +84,21 @@
 
   .mob-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
   .good-note{margin-top:4px;font-size:11px;color:#667;line-height:1.4}
+  .tip{color:#8899aa;font-size:11px;margin-bottom:8px}
+
+  @media(max-width:480px){
+    body{padding:10px}
+    .card{padding:10px}
+    table{font-size:12px}
+    table td,table th{padding:4px 3px}
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
 
 <h1>🛒 亚马逊<span>欧洲站</span>定价计算器</h1>
-<div class="sub">簇绒地毯专用 · FBA统一€8.50</div>
+<div class="sub">点击任意国家行查看计算公式明细</div>
 
 <div class="card">
   <div class="card-t">📐 产品信息</div>
@@ -100,13 +123,13 @@
 <div class="summary-card" id="summaryBox"></div>
 
 <div class="card" style="padding-bottom:4px;">
-  <div class="card-t">🌍 10国售价对比 <span style="color:#facc15;font-size:10px;font-weight:400;text-transform:none;">（FBA统一€8.50）</span></div>
+  <div class="card-t">🌍 10国售价对比 <span style="color:#facc15;font-size:10px;font-weight:400;text-transform:none;">（点击展开公式）</span></div>
+  <div class="tip">👇 点击国家行查看完整计算公式</div>
   <div class="mob-scroll">
   <table>
     <thead>
       <tr>
         <th>国家</th>
-        <th>货币</th>
         <th>到岸成本</th>
         <th>VAT</th>
         <th>佣金</th>
@@ -121,7 +144,7 @@
     <tbody id="tbody"></tbody>
   </table>
   </div>
-  <div class="good-note">💡 VAT算法：售价÷(1+VAT%)得不含税收入。佣金按含税售价×15%。非欧元国FBA费按汇率折算。</div>
+  <div class="good-note">💡 售价含VAT。点击行展开详细公式计算过程。</div>
 </div>
 
 </div>
@@ -140,25 +163,21 @@ const COUNTRIES = [
   {id:'ie',name:'爱尔兰',flag:'🇮🇪',cur:'EUR',sym:'€',vat:23,rate:7.80}
 ];
 
-function fmt(n,d){d=d||2;return Number(n).toFixed(d)}
+const fmt=(n,d=2)=>Number(n).toFixed(d);
+const C=(n)=>n.toLocaleString();
 
 function calc(){
-  const w=parseFloat(document.getElementById('w').value)||0;
-  const h=parseFloat(document.getElementById('h').value)||0;
-  const g=parseFloat(document.getElementById('gsm').value)||0;
-  const cp=parseFloat(document.getElementById('cost').value)||0;
-  const sp=parseFloat(document.getElementById('ship').value)||0;
-  const ad=parseFloat(document.getElementById('ad').value)||0;
-  const tp=parseFloat(document.getElementById('profit').value)||0;
-  const fbaEUR=parseFloat(document.getElementById('fba').value)||0;
-
+  const w=+document.getElementById('w').value||0;
+  const h=+document.getElementById('h').value||0;
+  const g=+document.getElementById('gsm').value||0;
+  const cp=+document.getElementById('cost').value||0;
+  const sp=+document.getElementById('ship').value||0;
+  const ad=+document.getElementById('ad').value||0;
+  const tp=+document.getElementById('profit').value||0;
+  const fbaEUR=+document.getElementById('fba').value||0;
   if(!w||!h||!g)return;
 
-  const area=w*h/10000;
-  const aW=area*g/1000;
-  const pCost=area*cp;
-  const sCost=aW*sp;
-  const lCost=pCost+sCost;
+  const area=w*h/10000,aW=area*g/1000,pCost=area*cp,sCost=aW*sp,lCost=pCost+sCost;
 
   document.getElementById('summaryBox').innerHTML=
     `<div class="stat"><div class="num">${fmt(area,3)}</div><div class="lbl">面积(m²)</div></div>
@@ -166,40 +185,95 @@ function calc(){
      <div class="stat"><div class="num">¥${fmt(pCost,1)}</div><div class="lbl">采购成本</div></div>
      <div class="stat"><div class="num">¥${fmt(lCost,1)}</div><div class="lbl">到岸成本</div></div>`;
 
-  const referral=0.15;
-  const adPct=ad/100;
+  const refPct=0.15,adPct=ad/100,targetP=tp/100;
   let rows='';
   COUNTRIES.forEach((c,i)=>{
-    const fbaLocal=fbaEUR*7.80/c.rate; // convert 8.50 EUR to local currency
+    const fbaLocal=fbaEUR*7.80/c.rate;
     const vatM=1+c.vat/100;
-    const targetP=tp/100;
-    const lCostEUR=lCost/c.rate;
-    const coef=1/vatM - referral - adPct - targetP;
+    const lCostLoc=lCost/c.rate;
+    const coef=1/vatM-refPct-adPct-targetP;
 
-    let priceLoc=0,priceRMB=0,pRMB=0,pPct=0,adAmt=0;
+    let pLoc=0,pRMB=0,profitRMB=0,profitPct=0,adAmt=0;
+    let refAmt=0,vatAmt=0,netRev=0;
     if(coef>0){
-      priceLoc=(fbaLocal+lCostEUR)/coef;
-      priceRMB=priceLoc*c.rate;
-      adAmt=priceLoc*adPct;
-      pRMB=(priceLoc/vatM - priceLoc*referral - adAmt - fbaLocal)*c.rate - lCost;
-      pPct=pRMB/(priceLoc*c.rate)*100;
+      pLoc=(fbaLocal+lCostLoc)/coef;
+      pRMB=pLoc*c.rate;
+      adAmt=pLoc*adPct;
+      refAmt=pLoc*refPct;
+      netRev=pLoc/vatM;
+      vatAmt=pLoc-netRev;
+      profitRMB=(netRev-refAmt-adAmt-fbaLocal)*c.rate-lCost;
+      profitPct=profitRMB/pRMB*100;
     }
 
-    rows+=`<tr class="${i%2?'tr-alt':''}">
+    const id=c.id;
+    const alt=i%2?'tr-alt':'';
+
+    rows+=`<tr class="row-main ${alt}" onclick="toggle('${id}')">
       <td><span class="flag">${c.flag}</span>${c.name}</td>
-      <td class="dim">${c.cur}</td>
       <td>¥${fmt(lCost)}</td>
       <td>${c.vat}%</td>
-      <td>${referral*100}%</td>
+      <td>${refPct*100}%</td>
       <td class="dim">${c.sym}${fmt(adAmt)}</td>
       <td class="dim">${c.sym}${fmt(fbaLocal)}</td>
-      <td class="price">${c.sym}${fmt(priceLoc)}</td>
-      <td class="cny">¥${fmt(priceRMB)}</td>
-      <td class="profit ${pRMB>=0?'green':'red'}">¥${fmt(pRMB)}</td>
-      <td class="profit ${pPct>=0?'green':'red'}">${fmt(pPct,1)}%</td>
+      <td class="price">${c.sym}${fmt(pLoc)}</td>
+      <td class="cny">¥${fmt(pRMB)}</td>
+      <td class="profit ${profitRMB>=0?'green':'red'}">¥${fmt(profitRMB)}</td>
+      <td class="profit ${profitPct>=0?'green':'red'}">${fmt(profitPct,1)}%</td>
+    </tr>
+    <tr class="row-detail" id="d_${id}">
+      <td colspan="10">
+        <div class="detail-box">
+          <div style="color:#f90;font-weight:600;margin-bottom:6px;">📐 ${c.flag} ${c.name} · 售价计算公式明细</div>
+
+          <div style="color:#60a5fa;font-weight:500;margin:8px 0 4px;">第1步：基础数据</div>
+          <div class="line"><span class="l">产品面积</span><span class="r">${fmt(w)}×${fmt(h)}÷10000 = ${fmt(area,3)} m²</span></div>
+          <div class="line"><span class="l">单品实重</span><span class="r">${fmt(area,3)}×${fmt(g)}÷1000 = ${fmt(aW,2)} kg</span></div>
+          <div class="line"><span class="l">采购成本</span><span class="r">${fmt(area,3)}×¥${fmt(cp)} = ¥${fmt(pCost,2)}</span></div>
+          <div class="line"><span class="l">头程运费</span><span class="r">${fmt(aW,2)}×¥${fmt(sp)} = ¥${fmt(sCost,2)}</span></div>
+          <div class="line total"><span class="l">到岸成本</span><span class="r">¥${fmt(lCost,2)}</span></div>
+
+          <div style="color:#60a5fa;font-weight:500;margin:8px 0 4px;">第2步：换算到 ${c.cur}（汇率 1${c.cur}=¥${fmt(c.rate)}）</div>
+          <div class="line"><span class="l">到岸成本(本币)</span><span class="r">¥${fmt(lCost)} ÷ ${fmt(c.rate)} = ${c.sym}${fmt(lCostLoc,2)}</span></div>
+          <div class="line"><span class="l">FBA费(本币)</span><span class="r">€${fmt(fbaEUR)}×${fmt(c.rate)}÷${fmt(c.rate)} = ${c.sym}${fmt(fbaLocal,2)} <span class="sub">（非欧元国: €${fmt(fbaEUR)}×7.80÷${fmt(c.rate)}）</span></span></div>
+
+          <div style="color:#60a5fa;font-weight:500;margin:8px 0 4px;">第3步：计算系数（各项占售价的比例）</div>
+          <div class="line"><span class="l">VAT系数</span><span class="r">1÷(1+${c.vat}%) = ${fmt(1/vatM,4)}（不含税收入占比）</span></div>
+          <div class="line"><span class="l">佣金比例</span><span class="r">${refPct*100}%</span></div>
+          <div class="line"><span class="l">广告费比例</span><span class="r">${ad}%</span></div>
+          <div class="line"><span class="l">目标净利率</span><span class="r">${tp}%</span></div>
+          <div class="line"><span class="l">可分配系数</span><span class="r">${fmt(1/vatM,4)} - ${fmt(refPct,2)} - ${fmt(adPct,2)} - ${fmt(targetP,2)} = <span style="color:#facc15;font-weight:700;">${fmt(coef,4)}</span></span></div>
+
+          <div style="color:#60a5fa;font-weight:500;margin:8px 0 4px;">第4步：计算建议售价</div>
+          <div class="line"><span class="l">售价公式</span><span class="r fn">(FBA + 到岸成本) ÷ 可分配系数</span></div>
+          <div class="line total"><span class="l">建议售价（含VAT）</span><span class="r" style="font-size:15px;">${c.sym}${fmt(pLoc,2)}</span></div>
+          <div class="line"><span class="l"> ≈ 人民币</span><span class="r">${c.sym}${fmt(pLoc,2)} × ${fmt(c.rate)} = ¥${C(Math.round(pRMB))}</span></div>
+
+          <div style="color:#60a5fa;font-weight:500;margin:8px 0 4px;">第5步：验证各项扣除与利润</div>
+          <div class="line"><span class="l">① 售价（含VAT）</span><span class="r">${c.sym}${fmt(pLoc,2)}</span></div>
+          <div class="line"><span class="l">② 减：VAT (${c.vat}%)</span><span class="r" style="color:#f87171;">-${c.sym}${fmt(vatAmt,2)} <span class="sub">(${c.sym}${fmt(pLoc,2)} - ${c.sym}${fmt(pLoc,2)}÷1.${c.vat})</span></span></div>
+          <div class="line"><span class="l">&nbsp;&nbsp;= 不含税收入</span><span class="r" style="color:#4ade80;">${c.sym}${fmt(netRev,2)}</span></div>
+          <div class="line"><span class="l">③ 减：佣金 (${refPct*100}%)</span><span class="r" style="color:#f87171;">-${c.sym}${fmt(refAmt,2)}</span></div>
+          <div class="line"><span class="l">④ 减：广告费 (${ad}%)</span><span class="r" style="color:#f87171;">-${c.sym}${fmt(adAmt,2)}</span></div>
+          <div class="line"><span class="l">⑤ 减：FBA费</span><span class="r" style="color:#f87171;">-${c.sym}${fmt(fbaLocal,2)}</span></div>
+          <div class="line"><span class="l">&nbsp;&nbsp;= 毛利（本币）</span><span class="r" style="color:#4ade80;">${c.sym}${fmt(netRev-refAmt-adAmt-fbaLocal,2)}</span></div>
+          <div class="line"><span class="l">⑥ 减：到岸成本</span><span class="r" style="color:#f87171;">-${c.sym}${fmt(lCostLoc,2)}</span></div>
+          <div class="line total"><span class="l">✅ 净利润</span><span class="r" style="color:#4ade80;">${c.sym}${fmt(netRev-refAmt-adAmt-fbaLocal-lCostLoc,2)} <span class="sub">≈ ¥${fmt(profitRMB)}</span></span></div>
+          <div class="line"><span class="l">✅ 净利率</span><span class="r" style="color:#4ade80;">${fmt(profitPct,1)}% <span class="sub">= ¥${fmt(profitRMB)} ÷ ¥${C(Math.round(pRMB))}</span></span></div>
+        </div>
+      </td>
     </tr>`;
   });
   document.getElementById('tbody').innerHTML=rows;
+}
+
+let openId=null;
+function toggle(id){
+  const el=document.getElementById('d_'+id);
+  if(!el)return;
+  if(openId&&openId!==id)document.getElementById('d_'+openId)?.classList.remove('show');
+  el.classList.toggle('show');
+  openId=el.classList.contains('show')?id:null;
 }
 
 calc();
