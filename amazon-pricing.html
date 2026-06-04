@@ -55,6 +55,7 @@
   .profit{font-weight:600}
   .green{color:#4ade80}
   .red{color:#f87171}
+  .yellow{color:#facc15}
   .dim{color:#8899aa}
   .size-tag{
     display:inline-block;padding:1px 6px;border-radius:4px;
@@ -68,7 +69,7 @@
   }
 
   .summary-card{
-    display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));
     gap:8px;margin-bottom:12px
   }
   .stat{
@@ -79,6 +80,12 @@
 
   .mob-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
   .good-note{margin-top:4px;font-size:11px;color:#667;line-height:1.4}
+  .warn-box{
+    background:rgba(250,204,21,.08);border:1px solid #facc15;
+    border-radius:8px;padding:10px 12px;font-size:12px;
+    color:#e8edf0;margin-bottom:12px;line-height:1.6
+  }
+  .warn-box .t{color:#facc15;font-weight:600}
 
   @media(max-width:480px){
     body{padding:10px}
@@ -107,12 +114,17 @@
   <div class="grid3">
     <div class="ig"><label>采购价 (元/m²)</label><input type="number" id="cost" value="60" oninput="calc()"></div>
     <div class="ig"><label>头程运费 (元/kg)</label><input type="number" id="ship" value="20" oninput="calc()"></div>
-    <div class="ig"><label>广告费预估 (%)</label><input type="number" id="ad" value="20" oninput="calc()"></div>
+    <div class="ig"><label>广告费 (%)</label><input type="number" id="ad" value="20" oninput="calc()"></div>
   </div>
   <div class="grid2" style="margin-top:2px">
-    <div class="ig"><label>目标净利润率 (%)</label><input type="number" id="profit" value="30" oninput="calc()"></div>
-    <div></div>
+    <div class="ig"><label>目标净利率 (%)</label><input type="number" id="profit" value="30" oninput="calc()"></div>
+    <div class="ig"><label>卷起厚度 (cm)</label><input type="number" id="thick" value="10" oninput="calc()"></div>
   </div>
+</div>
+
+<!-- Warning -->
+<div class="warn-box" id="warnBox">
+  <span class="t">⚠️ 体积重注意：</span> 地毯类商品亚马逊按<span style="color:#facc15;font-weight:600">体积重</span>计费（长×宽×卷厚÷5000）。当前体积重 <span id="vwDisplay" style="color:#facc15;font-weight:600">-</span> kg，是实重 <span id="awDisplay" style="color:#8899aa">-</span> kg 的 <span id="ratioDisplay" style="color:#facc15;font-weight:600">-</span> 倍，<span id="tierDesc">-</span>
 </div>
 
 <!-- Summary -->
@@ -142,7 +154,7 @@
   </table>
   </div>
   <div class="good-note">
-    💡 体积重 = 长×宽×2.5cm ÷ 5000。FBA按体积重与实重的较大值计费。价格均为含VAT售价。所有费用为估算值，以亚马逊官方为准。
+    💡 体积重=长×宽×卷厚÷5000，FBA按体积重与实重较大值计费。价格均为含VAT售价。FBA费为估算值，以亚马逊官方实际扣费为准。
   </div>
 </div>
 
@@ -151,25 +163,35 @@
 <script>
 const COUNTRIES = [
   {id:'de',name:'德国',flag:'🇩🇪',cur:'EUR',sym:'€',vat:19,rate:7.80,
-   fbaS:4.20,fbaSk:0.80,fbaL:5.80,fbaLk:1.05,fbaO:11.00,fbaOk:0.70},
+   fbaS:4.20,fbaSk:0.80,fbaSm:3,fbaL:5.80,fbaLk:1.05,fbaLm:8,
+   fbaO:11.00,fbaOk:0.70,fbaOm:15},
   {id:'uk',name:'英国',flag:'🇬🇧',cur:'GBP',sym:'£',vat:20,rate:9.10,
-   fbaS:4.50,fbaSk:0.85,fbaL:6.20,fbaLk:1.10,fbaO:12.00,fbaOk:0.75},
+   fbaS:4.50,fbaSk:0.85,fbaSm:3,fbaL:6.20,fbaLk:1.10,fbaLm:8,
+   fbaO:12.00,fbaOk:0.75,fbaOm:15},
   {id:'fr',name:'法国',flag:'🇫🇷',cur:'EUR',sym:'€',vat:20,rate:7.80,
-   fbaS:4.30,fbaSk:0.82,fbaL:5.90,fbaLk:1.08,fbaO:11.50,fbaOk:0.72},
+   fbaS:4.30,fbaSk:0.82,fbaSm:3,fbaL:5.90,fbaLk:1.08,fbaLm:8,
+   fbaO:11.50,fbaOk:0.72,fbaOm:15},
   {id:'it',name:'意大利',flag:'🇮🇹',cur:'EUR',sym:'€',vat:22,rate:7.80,
-   fbaS:4.25,fbaSk:0.80,fbaL:5.85,fbaLk:1.05,fbaO:11.30,fbaOk:0.70},
+   fbaS:4.25,fbaSk:0.80,fbaSm:3,fbaL:5.85,fbaLk:1.05,fbaLm:8,
+   fbaO:11.30,fbaOk:0.70,fbaOm:15},
   {id:'es',name:'西班牙',flag:'🇪🇸',cur:'EUR',sym:'€',vat:21,rate:7.80,
-   fbaS:4.15,fbaSk:0.78,fbaL:5.70,fbaLk:1.02,fbaO:11.00,fbaOk:0.68},
+   fbaS:4.15,fbaSk:0.78,fbaSm:3,fbaL:5.70,fbaLk:1.02,fbaLm:8,
+   fbaO:11.00,fbaOk:0.68,fbaOm:15},
   {id:'nl',name:'荷兰',flag:'🇳🇱',cur:'EUR',sym:'€',vat:21,rate:7.80,
-   fbaS:4.40,fbaSk:0.85,fbaL:6.00,fbaLk:1.10,fbaO:12.00,fbaOk:0.75},
+   fbaS:4.40,fbaSk:0.85,fbaSm:3,fbaL:6.00,fbaLk:1.10,fbaLm:8,
+   fbaO:12.00,fbaOk:0.75,fbaOm:15},
   {id:'be',name:'比利时',flag:'🇧🇪',cur:'EUR',sym:'€',vat:21,rate:7.80,
-   fbaS:4.25,fbaSk:0.82,fbaL:5.85,fbaLk:1.07,fbaO:11.50,fbaOk:0.72},
+   fbaS:4.25,fbaSk:0.82,fbaSm:3,fbaL:5.85,fbaLk:1.07,fbaLm:8,
+   fbaO:11.50,fbaOk:0.72,fbaOm:15},
   {id:'se',name:'瑞典',flag:'🇸🇪',cur:'SEK',sym:'kr',vat:25,rate:0.72,
-   fbaS:45,fbaSk:8,fbaL:60,fbaLk:10,fbaO:110,fbaOk:7},
+   fbaS:45,fbaSk:8,fbaSm:3,fbaL:60,fbaLk:10,fbaLm:8,
+   fbaO:110,fbaOk:7,fbaOm:15},
   {id:'pl',name:'波兰',flag:'🇵🇱',cur:'PLN',sym:'zł',vat:23,rate:1.70,
-   fbaS:18,fbaSk:3.5,fbaL:25,fbaLk:4.5,fbaO:45,fbaOk:3},
+   fbaS:18,fbaSk:3.5,fbaSm:3,fbaL:25,fbaLk:4.5,fbaLm:8,
+   fbaO:45,fbaOk:3,fbaOm:15},
   {id:'ie',name:'爱尔兰',flag:'🇮🇪',cur:'EUR',sym:'€',vat:23,rate:7.80,
-   fbaS:4.50,fbaSk:0.88,fbaL:6.30,fbaLk:1.15,fbaO:12.50,fbaOk:0.78}
+   fbaS:4.50,fbaSk:0.88,fbaSm:3,fbaL:6.30,fbaLk:1.15,fbaLm:8,
+   fbaO:12.50,fbaOk:0.78,fbaOm:15}
 ];
 
 function fmt(n,d){d=d||2;return Number(n).toFixed(d)}
@@ -182,22 +204,30 @@ function calc(){
   const sp=parseFloat(document.getElementById('ship').value)||0;
   const ad=parseFloat(document.getElementById('ad').value)||0;
   const tp=parseFloat(document.getElementById('profit').value)||0;
+  const tk=parseFloat(document.getElementById('thick').value)||2.5;
 
   if(!w||!h||!g)return;
 
   const area=w*h/10000;
   const aW=area*g/1000;
-  const vW=w*h*2.5/5000;
+  const vW=w*h*tk/5000;
   const bW=Math.max(aW,vW);
   const pCost=area*cp;
   const sCost=aW*sp;
   const lCost=pCost+sCost;
 
+  // Volume weight warning
+  document.getElementById('vwDisplay').textContent=fmt(vW,2);
+  document.getElementById('awDisplay').textContent=fmt(aW,2);
+  const ratio=vW/aW;
+  document.getElementById('ratioDisplay').textContent=fmt(ratio,1);
+  document.getElementById('tierDesc').textContent=ratio>5?'地板价都被体积重吃掉了⚠️':'FBA按体积重收费，注意控制包装尺寸';
+
   // Summary
   document.getElementById('summaryBox').innerHTML=
-    `<div class="stat"><div class="num">${fmt(area,3)}m²</div><div class="lbl">面积</div></div>
-     <div class="stat"><div class="num">${fmt(aW,2)}kg</div><div class="lbl">实重</div></div>
-     <div class="stat"><div class="num">${fmt(vW,2)}kg</div><div class="lbl">体积重</div></div>
+    `<div class="stat"><div class="num">${fmt(area,3)}</div><div class="lbl">面积(m²)</div></div>
+     <div class="stat"><div class="num">${fmt(aW,2)}</div><div class="lbl">实重(kg)</div></div>
+     <div class="stat"><div class="num">${fmt(vW,2)}</div><div class="lbl">体积重(kg)</div></div>
      <div class="stat"><div class="num">¥${fmt(lCost,1)}</div><div class="lbl">到岸成本</div></div>`;
 
   // Table
@@ -205,9 +235,9 @@ function calc(){
   const adPct=ad/100;
   let rows='';
   COUNTRIES.forEach((c,i)=>{
-    let fba,tier='S';
-    if(bW<=1.2){fba=c.fbaS+c.fbaSk*bW}
-    else if(bW<=3){fba=c.fbaL+c.fbaLk*bW;tier='L'}
+    let fba,tier;
+    if(bW<=c.fbaSm){fba=c.fbaS+c.fbaSk*bW;tier='S'}
+    else if(bW<=c.fbaLm){fba=c.fbaL+c.fbaLk*bW;tier='L'}
     else{fba=c.fbaO+c.fbaOk*bW;tier='O'}
 
     const vatP=c.vat/100;
@@ -230,8 +260,8 @@ function calc(){
       <td>¥${fmt(lCost)}</td>
       <td>${c.vat}%</td>
       <td>${referral*100}%</td>
-      <td class="dim">${c.sym}${fmt(adAmt)} (${ad}%)</td>
-      <td class="dim">${c.sym}${fmt(fba)} <span class="size-tag">${tier}</span></td>
+      <td class="dim">${c.sym}${fmt(adAmt)}</td>
+      <td class="dim">${tier==='O'?'<span style="color:#f87171">':''}${c.sym}${fmt(fba)}${tier==='O'?'</span>':''} <span class="size-tag">${tier}</span></td>
       <td class="price">${c.sym}${fmt(priceLoc)}</td>
       <td class="cny">¥${fmt(priceRMB)}</td>
       <td class="profit ${pRMB>=0?'green':'red'}">¥${fmt(pRMB)}</td>
